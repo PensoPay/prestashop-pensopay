@@ -1663,14 +1663,32 @@ class PensoPay extends PaymentModule
             $order_id = $vars->order_id;
         }
         if ($this->v16) {
-            $html = '<div class="row"><div class="col-lg-5 panel">
+            $html = '<div class="row"><div class="col-lg-5 panel pensopay-order-info">
                 <div class="panel-heading"><img src="'.$this->_path.'logo.gif" />
                 '.$this->l('PensoPay API').'</div>';
         } else {
             $html = '<br />
-                <fieldset>
+                <fieldset class="pensopay-order-info">
                 <legend>'.$this->l('PensoPay API').'</legend>';
         }
+
+        $html .= '
+            <style type="text/css">
+                
+                
+                .pensopay-order-info > div.panel-heading {
+                    text-align: center;
+                    height: 100% !important;
+                }
+                
+                .pensopay-order-info > div > img {
+                    width: 160px;
+                    display: block;
+                    padding-top: 15px;
+                    margin: 0 auto;
+                }
+            </style>
+        ';
 
         $double_post = false;
         $status_data = $this->doCurl('payments/'.$trans_id);
