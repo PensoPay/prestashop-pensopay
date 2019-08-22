@@ -13,6 +13,11 @@
 {foreach from=$imgs item=img}
             <img src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/{$img|escape:'htmlall':'UTF-8'}.png" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
 {/foreach}
+
+{if isset($type) and $type eq 'viabill' and isset($cart)}
+	<div class="viabill-pricetag" data-view="payment" data-price="{$cart.totals.total.amount}"></div>
+{/if}
+
 {if $fees|@count gt 0}
 <span style="display:table">
 {foreach from=$fees item=fee}

@@ -2,7 +2,7 @@
 <module>
     <name>pensopay</name>
     <displayName><![CDATA[PensoPay]]></displayName>
-    <version><![CDATA[1.0.0]]></version>
+    <version><![CDATA[1.0.1]]></version>
     <description><![CDATA[Payment via PensoPay]]></description>
     <author><![CDATA[PensoPay ApS]]></author>
     <tab><![CDATA[payments_gateways]]></tab>

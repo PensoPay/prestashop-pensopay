@@ -20,6 +20,12 @@
             <img src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/{$img|escape:'htmlall':'UTF-8'}.png" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
 {/foreach}
 		&nbsp;
+
+		{if isset($type) and $type eq 'viabill' and isset($cart)}
+			<div class="viabill-pricetag" data-view="payment" data-price="{$cart.totals.total.amount}"></div>
+		{/if}
+		&nbsp;
+
 		{$text|escape:'htmlall':'UTF-8'}
 {if $fees|@count gt 0}
 <span style="display:table">

@@ -8,17 +8,25 @@
 <div class="panel">
 	<h3><i class="icon icon-credit-card"></i> {l s='PensoPay' mod='pensopay'}</h3>
 	<p>
-		<strong>{l s='This module allows you to accept payments using PensoPay.' mod='pensopay'}</strong>
+		<strong>{l s='It has never been easier to start accepting credit card payments online.' mod='pensopay'}</strong>
 	</p>
 	<p>
-		{l s='In order for the module to work, you need to configure merchant ID, agreement ID, API key and private key.' mod='pensopay'}
-		{l s='These values can be found in the PensoPay control panel in the Settings tree.' mod='pensopay'}
+		<strong>{l s='PensoPay offers acquiring and payment gateway in one solution!' mod='pensopay'}</strong>
+	</p>
+	<p id="pseudoanchor">
+		{l s='With your PensoPay Solution, you can accept all Visa and MasterCards worldwide, and a lot of alternative payment methods like Apple Pay, MobilePay, Swish, Vipps, PayPal, Klarna, ViaBill, Sofort and lots more.
+See them all here: https://pensopay.com/en/' mod='pensopay'}
 	</p>
 	<p>
-		{l s='The user key must be configured in order to capture, cancel and refund transactions via the API. The user key is also used to calculate the fees if you let the customer pay the fees. For safety reasons it is recommended to create a user with minimal access rights.' mod='pensopay'}
+		{l s='If you dont have a PensoPay account, please create an account here:' mod='pensopay'} <a href="https://dashboard.pensopay.com/register" target="_blank">https://dashboard.pensopay.com/register</a> {l s='- you will be up and running in only 1-3 days.' mod='pensopay'}
 	</p>
 	<p>
-		{l s='Notice that you may change the ordering of the cards with drag/drop.' mod='pensopay' mod='pensopay'}
+		{l s='If you already have an account, just go to the' mod='pensopay'} <a href="#pseudoanchor">{l s='configuration.' mod='pensopay'}</a>
+	</p>
+	<p>
+		<strong>
+			{l s='Any questions, don\'t hesitate to contact us:' mod='pensopay'} <a href="mailto:support@pensopay.com">support@pensopay.com</a> {l s='or' mod='pensopay'} <a href="tel:+45 77344388">+45 77344388</a> {l s='press 9 for English.' mod='pensopay'}
+		</strong>
 	</p>
 </div>
 

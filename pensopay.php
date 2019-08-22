@@ -15,11 +15,21 @@ class PensoPay extends PaymentModule
     protected $config_form = false;
     private $post_errors = array();
 
+    const METHOD_REDIRECT = 0;
+    const METHOD_IFRAME = 1;
+
+    const MODE_VARIABLE = 'mode';
+    const MODE_COMPLETE = 'complete';
+    const MODE_CANCEL   = 'canceled';
+
+    const COOKIE_CONTINUEURL = 'continue_url';
+    const COOKIE_ORDER_CANCELLED = 'order_cancelled';
+
     public function __construct()
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.0';
+        $this->version = '1.0.1';
         $this->v14 = _PS_VERSION_ >= '1.4.1.0';
         $this->v15 = _PS_VERSION_ >= '1.5.0.0';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
@@ -154,6 +164,8 @@ class PensoPay extends PaymentModule
                 $this->l('Google analytics tracking ID'), '', ''),
             array('_PENSOPAY_STATEMENT_TEXT', 'statementtext',
                 $this->l('Text on statement'), '', ''),
+            array('_PENSOPAY_VIABILL_ID', 'viabillid',
+                $this->l('Viabill ID'), '', ''),
             array('_PENSOPAY_TESTMODE', 'testmode',
                 $this->l('Accept test payments'), 0, ''),
             array('_PENSOPAY_COMBINE', 'combine',
@@ -178,6 +190,8 @@ class PensoPay extends PaymentModule
                     $this->l('Branding in payment window'), 0, ''),
             array('_PENSOPAY_FEE_TAX', 'feetax',
                     $this->l('Tax for card fee'), 0, ''),
+            array('_PENSOPAY_PAYMETHOD_TAX', 'paymethod',
+                $this->l('Payment method'), 0, ''),
             array('_PENSOPAY_VIABILL', 'viabill',
                     $this->l('ViaBill - buy now, pay whenever you want'), 0, 'viabill'),
             array('_PENSOPAY_DK', 'dk',
@@ -625,7 +639,8 @@ class PensoPay extends PaymentModule
             $vars->var_name != 'orderprefix' &&
             $vars->var_name != 'statecapture' &&
             $vars->var_name != 'branding' &&
-            $vars->var_name != 'feetax';
+            $vars->var_name != 'feetax' &&
+            $vars->var_name != 'paymethod';
     }
 
     protected function getConfigInput15($vars)
@@ -776,6 +791,32 @@ class PensoPay extends PaymentModule
         return $input;
     }
 
+    protected function getPaymethodInput($vars)
+    {
+        $methods = array(
+            self::METHOD_REDIRECT => $this->l('Redirect'),
+            self::METHOD_IFRAME   => $this->l('Iframe')
+        );
+        $query = array();
+        foreach ($methods as $id => $name) {
+            $query[] = array(
+                'id' => $id,
+                'name' => $name
+            );
+        }
+        $input = array(
+            'type' => 'select',
+            'name' => $vars->glob_name,
+            'label' => $vars->card_text,
+            'options' => array(
+                'query' =>  $query,
+                'id' => 'id',
+                'name' => 'name'
+            )
+        );
+        return $input;
+    }
+
     protected function getConfigSettings()
     {
         $inputs = array();
@@ -794,6 +835,10 @@ class PensoPay extends PaymentModule
             }
             if ($vars->var_name == 'feetax') {
                 $inputs[] = $this->getFeeTaxInput($vars);
+                continue;
+            }
+            if ($vars->var_name == 'paymethod') {
+                $inputs[] = $this->getPaymethodInput($vars);
                 continue;
             }
             $inputs[] = $this->getConfigInput($vars);
@@ -1221,6 +1266,54 @@ class PensoPay extends PaymentModule
         return $amount;
     }
 
+    public function hookDisplayProductPriceBlock($data)
+    {
+        $product = $data['product'];
+        if ($this->isViabillValid() && !empty($product) && !$product->__isset('viabill')) {
+            $product->__set('viabill', true); //do not repeat more than once per product
+            $type = Tools::getValue('controller');
+            if ($type !== 'product')
+                $type = 'list';
+            return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="' . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
+        }
+    }
+
+    public function isViabillValid()
+    {
+        return $this->getSetup()->viabill && !empty($this->getSetup()->viabillid);
+    }
+
+    public function hookDisplayHeader()
+    {
+        if ($this->isViabillValid()) {
+            return "<script type='text/javascript'>
+                var o;
+    
+                var viabillInit = function() {
+                    o =document.createElement('script');
+                    o.type='text/javascript';
+                    o.async=true;
+                    o.id = 'viabillscript';
+                    o.src='https://pricetag.viabill.com/script/" . $this->getSetup()->viabillid . "';
+                    var s=document.getElementsByTagName('script')[0];
+                    s.parentNode.insertBefore(o,s);
+                };
+    
+                var viabillReset = function() {
+                    document.getElementById('viabillscript').remove();
+                    vb = null;
+                    pricetag = null;
+                    viabillInit();
+                };
+    
+                (function() {
+                    viabillInit();
+                })();
+    //                jQuery('body').on('updated_checkout', viabillReset);
+            </script>";
+        }
+    }
+
     public function hookHeader()
     {
         if ($this->v16) {
@@ -1290,9 +1383,19 @@ class PensoPay extends PaymentModule
                 'utm_nooverride' => 1
             )
         );
-        $cancelurl = $this->getPageLink('order', 'step=3');
+        if ($setup->paymethod == self::METHOD_IFRAME) {
+            $cookies = Context::getContext()->cookie;
+            $cookies->__set(self::COOKIE_CONTINUEURL, $continueurl);
+            $cookies->write();
+            $continueurl = $this->getModuleLink('iframeresponse');
+            $cancelurl = $this->getModuleLink('iframeresponse', array(self::MODE_VARIABLE => self::MODE_CANCEL));
+            $payment_url = $this->getModuleLink('iframe');
+        } else {
+            $cancelurl = $this->getPageLink('order', 'step=3');
+            $payment_url = $this->getModuleLink('payment');
+        }
         $callbackurl = $this->getModuleLink('validation');
-        $payment_url = $this->getModuleLink('payment');
+
         $html = '';
 
         if ($setup->autofee) {
@@ -1453,9 +1556,15 @@ class PensoPay extends PaymentModule
             if ($this->v17 && empty($cart->qpPreview)) {
                 $parms = array('option' => $id_option, 'order_id' => $order_id);
                 $tpl = 'module:pensopay/views/templates/hook/pensopay17.tpl';
+
+                if ($this->setup->paymethod == self::METHOD_IFRAME) {
+                    $moduleLink = $this->getModuleLink('iframe', $parms);
+                } else {
+                    $moduleLink = $this->getModuleLink('payment', $parms);
+                }
                 $newOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
                 $newOption->setCallToActionText($fields['text'])
-                    ->setAction($this->getModuleLink('payment', $parms))
+                    ->setAction($moduleLink)
                     ->setAdditionalInformation($this->fetch($tpl));
                 $paymentOptions[] = $newOption;
             } else {
@@ -2061,14 +2170,23 @@ class PensoPay extends PaymentModule
 
     public function hookDisplayExpressCheckout($params)
     {
-        if (!$this->getConf('_PENSOPAY_MOBILEPAY_CHECKOUT')) {
-            return '';
-        }
+        $html = '';
         $cart = $params['cart'];
+
+        if ($this->isViabillValid()) {
+            $html .= '<div class="viabill-pricetag" data-view="basket" data-price="' . round($cart->getOrderTotal(), 2) . '"></div>';
+        }
+
+        if (!$this->v17)
+            return $html;
+
+        if (!$this->getConf('_PENSOPAY_MOBILEPAY_CHECKOUT')) {
+            return $html;
+        }
         $invoice_address = new Address((int)$cart->id_address_invoice);
         $country = new Country($invoice_address->id_country);
         if ($country->iso_code && !in_array($country->iso_code, array('DK', 'FI', 'NO'))) {
-            return '';
+            return $html;
         }
         $prefix = $this->getConf('_PENSOPAY_ORDER_PREFIX');
         $order_id = $prefix.(int)$cart->id;
@@ -2079,7 +2197,7 @@ class PensoPay extends PaymentModule
         );
         $payment_url = $this->getModuleLink('payment', $parms);
         $this->context->smarty->assign('payment_url', $payment_url);
-        return $this->display(__FILE__, 'mobilepay.tpl');
+        return $html . $this->display(__FILE__, 'mobilepay.tpl');
     }
 
     public function hookShoppingCartExtra($params)
@@ -2149,6 +2267,9 @@ class PensoPay extends PaymentModule
             'google_analytics_client_id' => $setup->ga_client_id,
             'google_analytics_tracking_id' => $setup->ga_tracking_id
         );
+        if ($setup->paymethod == self::METHOD_IFRAME) {
+            $info['framed'] = true;
+        }
         if ($mobilepay_checkout) {
             $info += array(
                 'invoice_address_selection' => true,
@@ -2283,6 +2404,9 @@ class PensoPay extends PaymentModule
             $msg = 'PensoPay: Payment error: '.$vars->message;
             $this->addLog($msg, 2, 0, 'Cart', $id_cart);
             die($vars->message);
+        }
+        if ($setup->paymethod == self::METHOD_IFRAME) {
+            return $vars->url;
         }
         Tools::redirect($vars->url, '');
     }
