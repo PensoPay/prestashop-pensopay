@@ -1269,7 +1269,7 @@ class PensoPay extends PaymentModule
     public function hookDisplayProductPriceBlock($data)
     {
         $product = $data['product'];
-        if ($this->isViabillValid() && !empty($product) && !$product->__isset('viabill')) {
+        if ($this->isViabillValid() && !empty($product) && !$product->__isset('viabill') && ($data['type'] == 'after_price' || $data['type'] == 'unit_price')) {
             $product->__set('viabill', true); //do not repeat more than once per product
             $type = Tools::getValue('controller');
             if ($type !== 'product')
