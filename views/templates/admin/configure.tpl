@@ -8,6 +8,9 @@
 <div class="panel">
 	<h3><i class="icon icon-credit-card"></i> {l s='PensoPay' mod='pensopay'}</h3>
 	<p>
+		<img width="200" src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/logo.png" alt="{l s='PensoPay' mod='pensopay'}" />
+	</p>
+	<p>
 		<strong>{l s='It has never been easier to start accepting credit card payments online.' mod='pensopay'}</strong>
 	</p>
 	<p>
