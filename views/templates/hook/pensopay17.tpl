@@ -15,7 +15,7 @@
 {/foreach}
 
 {if isset($type) and $type eq 'viabill' and isset($cart)}
-	<div class="viabill-pricetag" data-view="payment" data-price="{$cart.totals.total.amount}"></div>
+	<div class="viabill-pricetag" data-view="payment" data-price="{$cart.totals.total.amount|escape:'htmlall':'UTF-8'}"></div>
 {/if}
 
 {if $fees|@count gt 0}

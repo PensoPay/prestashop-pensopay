@@ -43,7 +43,6 @@ class PensoPay extends PaymentModule
         parent::__construct();
 
         $this->displayName = $this->l('PensoPay');
-        $this->description = $this->l('Accept payments by PensoPay');
         $this->description = $this->l('Payment via PensoPay');
         $this->confirmUninstall =
             $this->l('Are you sure you want to delete your settings?');
@@ -54,7 +53,7 @@ class PensoPay extends PaymentModule
             $this->back_file =
                 $this->local_path.'backward_compatibility/backward.php';
             if (file_exists($this->back_file)) {
-                require($this->back_file);
+                require $this->back_file;
             }
         }
 
@@ -92,7 +91,7 @@ class PensoPay extends PaymentModule
 
     public function install()
     {
-        include(dirname(__FILE__).'/sql/install.php');
+        include dirname(__FILE__).'/sql/install.php';
         $this->checkLangFile();
 
         if (!parent::install()) {
@@ -120,7 +119,7 @@ class PensoPay extends PaymentModule
 
     public function uninstall()
     {
-        include(dirname(__FILE__).'/sql/uninstall.php');
+        include dirname(__FILE__).'/sql/uninstall.php';
 
         if (!parent::uninstall()) {
             return false;
@@ -474,7 +473,7 @@ class PensoPay extends PaymentModule
                 $err .= ' '.$this->l('You can get the compatibility module for free from').
                     ' <a href="http://addons.prestashop.com">http://addons.prestashop.com</a>';
             }
-            $err .= '<br /><br />'.$this->l('You must configure the compatibilty module.');
+            $err .= '<br><br>'.$this->l('You must configure the compatibilty module.');
             return $this->displayError($err);
         }
 
@@ -504,7 +503,7 @@ class PensoPay extends PaymentModule
             $this->context->controller->addJqueryUI('ui.sortable');
         } else {
             // Old PrestaShop
-            require($this->local_path.'backward_compatibility/HelperForm.php');
+            require $this->local_path.'backward_compatibility/HelperForm.php';
             $output .= '<script type="text/javascript" src="'.
                 $this->_path.'views/js/jquery-ui-1.9.0.custom.min.js"></script>';
         }
@@ -579,7 +578,7 @@ class PensoPay extends PaymentModule
 
         $out = $helper->generateForm(array($this->getConfigSettings()));
         if (!$this->v16) {
-            $out .= '<br />';
+            $out .= '<br>';
         }
         return $out;
     }
@@ -1269,12 +1268,17 @@ class PensoPay extends PaymentModule
     public function hookDisplayProductPriceBlock($data)
     {
         $product = $data['product'];
-        if ($this->isViabillValid() && !empty($product) && !$product->__isset('viabill') && ($data['type'] == 'after_price' || $data['type'] == 'unit_price')) {
+        if ($this->isViabillValid()
+            && !empty($product) && !$product->__isset('viabill')
+            && ($data['type'] == 'after_price' || $data['type'] == 'unit_price')
+        ) {
             $product->__set('viabill', true); //do not repeat more than once per product
             $type = Tools::getValue('controller');
-            if ($type !== 'product')
+            if ($type !== 'product') {
                 $type = 'list';
-            return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="' . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
+            }
+            return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="'
+                        . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
         }
     }
 
@@ -1309,7 +1313,6 @@ class PensoPay extends PaymentModule
                 (function() {
                     viabillInit();
                 })();
-    //                jQuery('body').on('updated_checkout', viabillReset);
             </script>";
         }
     }
@@ -1336,7 +1339,7 @@ class PensoPay extends PaymentModule
                 _PS_MODULE_DIR_.'pensopay/pensopay.inc.php'
             )
         ) {
-            include(_PS_MODULE_DIR_.'pensopay/pensopay.inc.php');
+            include _PS_MODULE_DIR_.'pensopay/pensopay.inc.php';
         }
         $setup = $this->getSetup();
         $hide_images_list = $this->imagesSetup();
@@ -1366,7 +1369,7 @@ class PensoPay extends PaymentModule
             $customer->secure_key = md5(uniqid(rand(), true));
         }
         $id_currency = (int)$cart->id_currency;
-        $currency = new Currency((int)$id_currency);
+        $currency = new Currency($id_currency);
 
         $language = new Language($this->context->language->id);
         $cart_total = $this->toQpAmount($cart->getOrderTotal(), $currency);
@@ -1776,7 +1779,7 @@ class PensoPay extends PaymentModule
                 <div class="panel-heading"><img src="'.$this->_path.'logo.gif" />
                 '.$this->l('PensoPay API').'</div>';
         } else {
-            $html = '<br />
+            $html = '<br>
                 <fieldset class="pensopay-order-info">
                 <legend>'.$this->l('PensoPay API').'</legend>';
         }
@@ -1935,7 +1938,7 @@ class PensoPay extends PaymentModule
         }
 
         $html .= '</tbody>';
-        $html .= '</table><br />';
+        $html .= '</table><br>';
 
         if (Tools::getValue('qpDebug')) {
             $html .= '<pre>'.print_r($this->jsonDecode($status_data), true).'</pre>';
@@ -2033,7 +2036,7 @@ class PensoPay extends PaymentModule
             $url .= '&id_order='.Tools::getValue('id_order');
             $url .= '&vieworder&token='.Tools::getValue('token');
         }
-        $html .= '<br /><br />';
+        $html .= '<br><br>';
         if ($resttocap > 0) {
             $resttocap = $this->toUserAmount($resttocap, $currency);
             $html .= '<form action="'.$url.'" method="post" name="capture-cancel">';
@@ -2043,7 +2046,7 @@ class PensoPay extends PaymentModule
                 <input style="width:auto;display:inline" type="text" name="acramount" value="'.$resttocap.'"/>
                 <input type="submit" class="button" name="qpcapture" value="'.
                 $this->l('Capture').'" onclick="return confirm(\''.
-                $this->l('Are you sure you want to capture the amount?').'\')"/></div><br />';
+                $this->l('Are you sure you want to capture the amount?').'\')"/></div><br>';
             $html .= '</form>';
         }
         if ($resttoref > 0) {
@@ -2055,7 +2058,7 @@ class PensoPay extends PaymentModule
                 <input style="width:auto;display:inline" type="text" name="acramountref" id="acramountref" value="" />
                 <input type="submit" class="button" name="qprefund" value="'.
                 $this->l('Refund').'" onclick="return confirm(\''.
-                $this->l('Are you sure you want to refund the amount?').'\');"/></div><br />';
+                $this->l('Are you sure you want to refund the amount?').'\');"/></div><br>';
             $html .= '</form>';
         }
         if ($allowcancel) {
@@ -2065,7 +2068,7 @@ class PensoPay extends PaymentModule
             $html .= $this->l('Cancel the transaction!');
             $html .= '" class="button" onclick="return confirm(\'';
                     $html .= $this->l('Are you sure you want cancel the transaction?').'\')"/></center>';
-            $html .= '</form><br />';
+            $html .= '</form><br>';
         }
         $html .= '<a href="https://manage.quickpay.net" target="_blank" style="color: blue;">'.
             $this->l('QuickPay manager').'</a>';
@@ -2102,10 +2105,10 @@ class PensoPay extends PaymentModule
                     $trans['trans_id'].'</td>';
                 $html .= '</tr></table>';
                 if (isset($vars->acquirer) && $vars->acquirer == 'viabill') {
-                    $html .= '<br/>';
+                    $html .= '<br>';
                     $html .='Det skyldige beløb kan alene betales med frigørende virkning til ViaBill, ';
                     $html .= 'som fremsender særskilt opkrævning.';
-                    $html .= '<br/>';
+                    $html .= '<br>';
                     $html .= 'Betaling kan ikke ske ved modregning af krav, der udspringer af andre retsforhold.';
                 }
                 return $html;
@@ -2174,11 +2177,13 @@ class PensoPay extends PaymentModule
         $cart = $params['cart'];
 
         if ($this->isViabillValid()) {
-            $html .= '<div class="viabill-pricetag" data-view="basket" data-price="' . round($cart->getOrderTotal(), 2) . '"></div>';
+            $html .= '<div class="viabill-pricetag" data-view="basket" data-price="'
+                        . round($cart->getOrderTotal(), 2) . '"></div>';
         }
 
-        if (!$this->v17)
+        if (!$this->v17) {
             return $html;
+        }
 
         if (!$this->getConf('_PENSOPAY_MOBILEPAY_CHECKOUT')) {
             return $html;

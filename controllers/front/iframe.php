@@ -19,8 +19,9 @@ class PensopayIframeModuleFrontController extends ModuleFrontController
         parent::initContent();
         $pensopay = new PensoPay();
         $payUrl = $pensopay->payment();
-        if (empty($payUrl))
-            return; // we got redirected to a success/fail url here
+        if (empty($payUrl)) {
+            return;
+        } // we got redirected to a success/fail url here
         $this->context->smarty->assign(
             array(
                 'src' => $payUrl,

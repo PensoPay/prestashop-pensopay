@@ -66,8 +66,9 @@ class HelperForm
 	public function generate()
 	{
 		$this->tpl = $this->createTemplate($this->base_tpl);
-		if (is_null($this->submit_action))
-			$this->submit_action = 'submitAdd'.$this->table;
+        if (is_null($this->submit_action)) {
+            $this->submit_action = 'submitAdd' . $this->table;
+        }
 
 		$this->tpl->assign(array(
 			'title' => $this->title,
@@ -101,11 +102,15 @@ class HelperForm
 	 */
 	public function getFieldsRequired()
 	{
-		foreach ($this->fields_form as $fieldset)
-			if (isset($fieldset['form']['input']))
-				foreach ($fieldset['form']['input'] as $input)
-					if (array_key_exists('required', $input) && $input['required'] && $input['type'] != 'radio')
-						return true;
+        foreach ($this->fields_form as $fieldset) {
+            if (isset($fieldset['form']['input'])) {
+                foreach ($fieldset['form']['input'] as $input) {
+                    if (array_key_exists('required', $input) && $input['required'] && $input['type'] != 'radio') {
+                        return true;
+                    }
+                }
+            }
+        }
 
 		return false;
 	}

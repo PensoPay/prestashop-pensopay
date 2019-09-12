@@ -10,9 +10,9 @@
  *  E-mail: support@pensopay.com
  */
 
-include(dirname(__FILE__).'/../../config/config.inc.php');
-include(dirname(__FILE__).'/../../init.php');
-require_once(dirname(__FILE__).'/pensopay.php');
+include dirname(__FILE__).'/../../config/config.inc.php';
+include dirname(__FILE__).'/../../init.php';
+require_once dirname(__FILE__).'/pensopay.php';
 
 if (_PS_VERSION_ >= '1.5.0.0') {
     die('Bad version');
@@ -42,7 +42,7 @@ for ($i = 0; $i < 10; $i++) {
         }
     }
     /* Wait for validation */
-    $id_order = Order::getOrderByCartId((int)$id_cart);
+    $id_order = Order::getOrderByCartId($id_cart);
     if ($id_order) {
         break;
     }
@@ -51,7 +51,7 @@ for ($i = 0; $i < 10; $i++) {
 if (!$id_order) {
     Tools::redirect('history.php');
 }
-$order = new Order((int)$id_order);
+$order = new Order($id_order);
 $id_customer = $cookie->id_customer;
 if (!$id_customer) {
     $id_guest = $cookie->id_guest;

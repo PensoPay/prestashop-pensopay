@@ -48,11 +48,11 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
         }
         unset($this->context->cookie->id_cart);
         parent::init();
-        $id_order = Order::getOrderByCartId((int)$id_cart);
+        $id_order = Order::getOrderByCartId($id_cart);
         if (!$id_order) {
             Tools::redirect('history.php');
         }
-        $order = new Order((int)$id_order);
+        $order = new Order($id_order);
         $customer = new Customer($order->id_customer);
         if ($key2) {
             $pensopay = new PensoPay();

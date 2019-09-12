@@ -186,7 +186,7 @@
 											{$value.label|escape:'htmlall':'UTF-8'}
 										 {/if}
 										</label>
-										{if isset($input.br) && $input.br}<br />{/if}
+										{if isset($input.br) && $input.br}<br>{/if}
 										{if isset($value.p) && $value.p}<p>{$value.p|escape:'htmlall':'UTF-8'}</p>{/if}
 									{/foreach}
 								{elseif $input.type == 'textarea'}
@@ -210,7 +210,7 @@
 											class="{if isset($input.class)}{$input.class|escape:'htmlall':'UTF-8'}{/if}"
 											{if isset($value.val)}value="{$value.val|escape:'htmlall':'UTF-8'}"{/if}
 											{if isset($fields_value[$id_checkbox]) && $fields_value[$id_checkbox]}checked="checked"{/if} />
-										<label for="{$id_checkbox|escape:'htmlall':'UTF-8'}" class="t"><strong>{$value[$input.values.name]|escape:'htmlall':'UTF-8'}</strong></label><br />
+										<label for="{$id_checkbox|escape:'htmlall':'UTF-8'}" class="t"><strong>{$value[$input.values.name]|escape:'htmlall':'UTF-8'}</strong></label><br>
 									{/foreach}
 								{elseif $input.type == 'file'}
 									{if isset($input.display_image) && $input.display_image}
@@ -221,7 +221,7 @@
 												<a href="{$current|escape:'htmlall':'UTF-8'}&{$identifier|escape:'htmlall':'UTF-8'}={$form_id|escape:'htmlall':'UTF-8'}&token={$token|escape:'htmlall':'UTF-8'}&deleteImage=1">
 													<img src="../img/admin/delete.gif" alt="{l s='Delete' mod='pensopay'}" /> {l s='Delete' mod='pensopay'}
 												</a>
-											</div><br />
+											</div><br>
 										{/if}
 									{/if}
 									<input type="file" name="{$input.name|escape:'htmlall':'UTF-8'}" {if isset($input.id)}id="{$input.id|escape:'htmlall':'UTF-8'}"{/if} />
@@ -288,9 +288,9 @@
 											{if is_array($input.desc)}
 												{foreach $input.desc as $p}
 													{if is_array($p)}
-														<span id="{$p.id|escape:'htmlall':'UTF-8'}">{$p.text|escape:'htmlall':'UTF-8'}</span><br />
+														<span id="{$p.id|escape:'htmlall':'UTF-8'}">{$p.text|escape:'htmlall':'UTF-8'}</span><br>
 													{else}
-														{$p|escape:'htmlall':'UTF-8'}<br />
+														{$p|escape:'htmlall':'UTF-8'}<br>
 													{/if}
 												{/foreach}
 											{else}
@@ -331,10 +331,10 @@
 						{if is_array($field)}
 							{foreach $field as $k => $p}
 								{if is_array($p)}
-									<span id="{$p.id|escape:'htmlall':'UTF-8'}">{$p.text|escape:'htmlall':'UTF-8'}</span><br />
+									<span id="{$p.id|escape:'htmlall':'UTF-8'}">{$p.text|escape:'htmlall':'UTF-8'}</span><br>
 								{else}
 									{$p|escape:'htmlall':'UTF-8'}
-									{if isset($field[$k+1])}<br />{/if}
+									{if isset($field[$k+1])}<br>{/if}
 								{/if}
 							{/foreach}
 						{else}
@@ -349,7 +349,7 @@
 			{/if}
 		</fieldset>
 		{block name="other_fieldsets"}{/block}
-		{if isset($fields[$f+1])}<br />{/if}
+		{if isset($fields[$f+1])}<br>{/if}
 	{/foreach}
 </form>
 {/block}
