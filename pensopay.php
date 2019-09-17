@@ -2215,7 +2215,15 @@ class PensoPay extends PaymentModule
             'order_id' => $order_id,
             'mobilepay_checkout' => 1
         );
-        $payment_url = $this->getModuleLink('payment', $parms);
+
+
+        $setup = $this->getSetup();
+        if ($setup->paymethod == self::METHOD_IFRAME) {
+            $payment_url = $this->getModuleLink('iframe', $parms);
+        } else {
+            $payment_url = $this->getModuleLink('payment', $parms);
+        }
+
         $this->context->smarty->assign('payment_url', $payment_url);
 
         $conditionsFinder = new ConditionsToApproveFinder(
