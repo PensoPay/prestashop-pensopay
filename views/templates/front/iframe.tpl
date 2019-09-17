@@ -7,13 +7,13 @@
 {extends "$layout"}
 {block name="content"}
     <section>
-        <iframe src="{$src|escape:'htmlall':'UTF-8'}" width="100%" height="650" ></iframe>
+        <iframe src="{$src nofilter}" width="100%" height="650" ></iframe>
     </section>
     <script type="text/javascript">
         var poller = setInterval(pollPayment, 5000);
 
         function pollPayment() {
-            jQuery.ajax('{$endpoint|escape:'htmlall':'UTF-8'}', {
+            jQuery.ajax('{$endpoint nofilter}', {
                 success: function (response) {
                     var obj = JSON.parse(response);
                     if (!obj.repeat) {

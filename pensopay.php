@@ -1268,17 +1268,28 @@ class PensoPay extends PaymentModule
     public function hookDisplayProductPriceBlock($data)
     {
         $product = $data['product'];
-        if ($this->isViabillValid()
-            && !empty($product) && !$product->__isset('viabill')
-            && ($data['type'] == 'after_price' || $data['type'] == 'unit_price')
-        ) {
-            $product->__set('viabill', true); //do not repeat more than once per product
-            $type = Tools::getValue('controller');
-            if ($type !== 'product') {
-                $type = 'list';
+        //Product can be either object or array here
+
+        if (!empty($product) && ($data['type'] === 'after_price' || $data['type'] === 'unit_price') && $this->isViabillValid()) {
+            if (
+                (is_object($product) && !$product->__isset('viabill'))
+                || isset($product['viabill'])
+            ) {
+                //do not repeat more than once per product
+                if (is_object($product)) {
+                    $product->__set('viabill', true);
+                }
+                else {
+                    $product['viabill'] = true;
+                }
+
+                $type = Tools::getValue('controller');
+                if ($type !== 'product') {
+                    $type = 'list';
+                }
+                return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="'
+                    . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
             }
-            return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="'
-                        . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
         }
     }
 
@@ -1289,6 +1300,10 @@ class PensoPay extends PaymentModule
 
     public function hookDisplayHeader()
     {
+        if ($this->context->controller->getPageName() === 'cart') {
+            $this->context->controller->addCSS($this->_path.'/views/css/cart.css');
+            $this->context->controller->addJS($this->_path.'/views/js/cart.js');
+        }
         if ($this->isViabillValid()) {
             return "<script type='text/javascript'>
                 var o;
@@ -2202,6 +2217,12 @@ class PensoPay extends PaymentModule
         );
         $payment_url = $this->getModuleLink('payment', $parms);
         $this->context->smarty->assign('payment_url', $payment_url);
+
+        $conditionsFinder = new ConditionsToApproveFinder(
+            $this->context,
+            $this->getTranslator()
+        );
+        $this->context->smarty->assign('conditions_to_approve', $conditionsFinder->getConditionsToApproveForTemplate());
         return $html . $this->display(__FILE__, 'mobilepay.tpl');
     }
 
