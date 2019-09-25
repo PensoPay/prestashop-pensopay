@@ -1,3 +1,10 @@
+{*
+* NOTICE OF LICENSE
+* Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+* E-mail: support@pensopay.com
+*}
 <br>
 <fieldset class="pensopay-order-info">
     <legend>{$title|escape:'htmlall':'UTF-8'}</legend>
@@ -21,7 +28,7 @@
             <p class="error alert-danger">{$error_text|escape:'htmlall':'UTF-8'}</p>
         {/if}
         {if isset($error_json) AND $error_json}
-            <pre>{$error_json nofilter}</pre>
+            <pre>{$error_json|escape:'html':'UTF-8'}</pre>
         {/if})
     {/if}
 
@@ -90,42 +97,42 @@
         <br>
         <br>
         {if $resttocap > 0}
-            <form action="{$url nofilter}" method="post" name="capture-cancel">
+            <form action="{$url|escape:'html':'UTF-8'}" method="post" name="capture-cancel">
                 <input type="hidden" name="qp_count" value="{$qp_count|escape:'htmlall':'UTF-8'}" />
                 <b>{l s='Amount to capture:' mod='pensopay'}</b>
                 <div>
                     <input style="width:auto;display:inline" type="text" name="acramount" value="{$resttocap_render|escape:'htmlall':'UTF-8'}" />
                     <input type="submit" class="button" name="qpcapture" value="{l s='Capture' mod='pensopay'}"
-                           onclick="return confirm('{l s='Are you sure you want to capture the amount?' mod='pensopay'}" />
+                           onclick="return confirm('{l s='Are you sure you want to capture the amount?' mod='pensopay'}')" />
                 </div>
                 <br>
             </form>
         {/if}
 
         {if $resttoref > 0}
-            <form action="{$url nofilter}" method="post" name="capture-cancel">
+            <form action="{$url|escape:'html':'UTF-8'}" method="post" name="capture-cancel">
                 <input type="hidden" name="qp_count" value="{$qp_count|escape:'htmlall':'UTF-8'}" />
                 <b>{l s='Amount to refund' mod='pensopay'} ({$resttoref_render|escape:'htmlall':'UTF-8'})</b>
                 <div>
                     <input style="width:auto;display:inline" type="text" name="acramountref" id="acramountref" value="" />
                     <input type="submit" class="button" name="qprefund" value="{l s='Refund' mod='pensopay'}"
-                           onclick="return confirm('{l s='Are you sure you want to refund the amount?' mod='pensopay'}" />
+                           onclick="return confirm('{l s='Are you sure you want to refund the amount?' mod='pensopay'}')" />
                 </div>
                 <br>
             </form>
         {/if}
 
         {if $allowcancel}
-            <form action="{$url nofilter}" method="post" name="capture-cancel">
+            <form action="{$url|escape:'html':'UTF-8'}" method="post" name="capture-cancel">
                 <input type="hidden" name="qp_count" value="{$qp_count|escape:'htmlall':'UTF-8'}" />
                 <input type="submit" class="button" name="qpcancel" value="{l s='Cancel the transaction!' mod='pensopay'}"
-                       onclick="return confirm('{l s='Are you sure you want cancel the transaction?' mod='pensopay'}'" />
+                       onclick="return confirm('{l s='Are you sure you want cancel the transaction?' mod='pensopay'}')" />
             </form>
             <br>
         {/if}
 
         <a href="https://manage.quickpay.net" target="_blank" style="color: blue;">{l s='QuickPay manager' mod='pensopay'}</a>
     {else}
-        <pre>{$fatal_error_text}</pre>
+        <pre>{$fatal_error_text|escape:'htmlall':'UTF-8'}</pre>
     {/if}
 </fieldset>

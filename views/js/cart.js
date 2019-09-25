@@ -1,3 +1,13 @@
+/**
+ * NOTICE OF LICENSE
+ *
+ *  @author    PensoPay A/S
+ *  @copyright 2019 PensoPay
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *
+ *  E-mail: support@pensopay.com
+ */
+
 function handleTerms() {
     var $terms = jQuery('.terms-checkbox input');
     if ($terms.is(':checked')) {

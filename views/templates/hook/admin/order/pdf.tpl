@@ -1,3 +1,10 @@
+{*
+* NOTICE OF LICENSE
+* Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+* E-mail: support@pensopay.com
+*}
 <table>
     <tr>
         <td style="width: 100%; text-align: right">{l s='PensoPay transaction ID:' mod='pensopay'} {$transaction_id|escape:'htmlall':'UTF-8'}</td>

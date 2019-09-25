@@ -1,14 +1,13 @@
 <?php
 /**
-* NOTICE OF LICENSE
-*
-*  @author    PensoPay A/S
-*  @copyright 2015 PensoPay
-*  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
-*
-*  $Date: 2019/01/14 21:29:48 $
-*  E-mail: support@pensopay.com
-*/
+ * NOTICE OF LICENSE
+ *
+ *  @author    PensoPay A/S
+ *  @copyright 2019 PensoPay
+ *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ *
+ *  E-mail: support@pensopay.com
+ */
 
 class PensoPay extends PaymentModule
 {
@@ -49,7 +48,7 @@ class PensoPay extends PaymentModule
      */
     private $v17;
 
-    private $_renderedViabillProducts = array();
+    private $renderedViabillProducts = array();
 
     public function __construct()
     {
@@ -537,7 +536,8 @@ class PensoPay extends PaymentModule
             // Old PrestaShop
             require $this->local_path . 'backward_compatibility/HelperForm.php';
             $this->context->smarty->assign('path', $this->_path);
-            $output .= $this->context->smarty->fetch($this->local_path . 'views/templates/compatibility/jqueryui.tpl');
+            $output .= $this->context->smarty->fetch($this->local_path
+                . 'views/templates/front/compatibility/jqueryui.tpl');
         }
         $output .= $this->displayErrors();
         if (Tools::getValue('submitPensopayModule') && !$this->post_errors) {
@@ -1338,9 +1338,9 @@ class PensoPay extends PaymentModule
                     }
 
                     //We need different conditions for version support so here goes:
-                    if ($productId && !isset($this->_renderedViabillProducts[$productId])) {
+                    if ($productId && !isset($this->renderedViabillProducts[$productId])) {
                         //do not repeat more than once per product
-                        $this->_renderedViabillProducts[$productId] = true;
+                        $this->renderedViabillProducts[$productId] = true;
 
                         $this->context->smarty->assign('type', $type);
                         $this->context->smarty->assign('price', round(Product::getPriceStatic($productId), 2));
@@ -1357,7 +1357,7 @@ class PensoPay extends PaymentModule
         return $this->getSetup()->viabill && !empty($this->getSetup()->viabillid);
     }
 
-    protected function _getPageName()
+    protected function getPageName()
     {
         if ($this->v17) {
             return $this->context->controller->getPageName();
@@ -1372,9 +1372,16 @@ class PensoPay extends PaymentModule
             $page_name = $this->page_name;
         } elseif (!empty($this->php_self)) {
             $page_name = $this->php_self;
-        } elseif (Tools::getValue('fc') == 'module' && $module_name != '' && (Module::getInstanceByName($module_name) instanceof PaymentModule)) {
+        } elseif (Tools::getValue('fc') == 'module'
+            && $module_name != ''
+            && (Module::getInstanceByName($module_name) instanceof PaymentModule)
+        ) {
             $page_name = 'module-payment-submit';
-        } elseif (preg_match('#^' . preg_quote($this->context->shop->physical_uri, '#') . 'modules/([a-zA-Z0-9_-]+?)/(.*)$#', $_SERVER['REQUEST_URI'], $m)) {
+        } elseif (preg_match(
+            '#^' . preg_quote($this->context->shop->physical_uri, '#') . 'modules/([a-zA-Z0-9_-]+?)/(.*)$#',
+            $_SERVER['REQUEST_URI'],
+            $m
+        )) {
             // @retrocompatibility Are we in a module ?
             $page_name = 'module-' . $m[1] . '-' . str_replace(array('.php', '/'), array('', '-'), $m[2]);
         } else {
@@ -1387,7 +1394,7 @@ class PensoPay extends PaymentModule
 
     public function hookDisplayHeader()
     {
-        if ($this->_getPageName() === 'cart') {
+        if ($this->getPageName() === 'cart') {
             $this->context->controller->addCSS($this->_path.'/views/css/cart.css');
             $this->context->controller->addJS($this->_path.'/views/js/cart.js');
         }

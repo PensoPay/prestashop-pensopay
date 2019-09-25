@@ -1,7 +1,8 @@
 {*
 * NOTICE OF LICENSE
-* $Date: 2017/10/04 19:59:35 $
 * Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 * E-mail: support@pensopay.com
 *}
 
@@ -12,7 +13,7 @@
     </h3>
     <div>
 	<div>
-            {$html nofilter}
+            {$html|escape:'javascript':'UTF-8'}
         </div>
     </div>
 </div>

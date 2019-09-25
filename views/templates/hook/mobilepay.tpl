@@ -1,7 +1,8 @@
 {*
 * NOTICE OF LICENSE
-* $Date: 2018/09/15 06:09:27 $
 * Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 * E-mail: support@pensopay.com
 *}
 
@@ -11,8 +12,8 @@
         <li>
             <div class="terms-checkbox">
               <span class="custom-checkbox">
-                <input  id    = "conditions_to_approve[{$condition_name}]"
-                        name  = "conditions_to_approve[{$condition_name}]"
+                <input  id    = "conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]"
+                        name  = "conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]"
                         required
                         type  = "checkbox"
                         value = "1"
@@ -22,8 +23,8 @@
               </span>
             </div>
             <div class="condition-label">
-                <label class="js-terms" for="conditions_to_approve[{$condition_name}]">
-                    {$condition nofilter}
+                <label class="js-terms" for="conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]">
+                    {$condition|escape:'html':'UTF-8'}
                 </label>
             </div>
         </li>

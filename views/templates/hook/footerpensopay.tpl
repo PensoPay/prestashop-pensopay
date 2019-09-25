@@ -1,7 +1,8 @@
 {*
 * NOTICE OF LICENSE
-* $Date: 2018/09/15 06:03:59 $
 * Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 * E-mail: support@pensopay.com
 *}
 

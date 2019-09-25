@@ -5,4 +5,6 @@
 * license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 * E-mail: support@pensopay.com
 *}
-<div class="viabill-pricetag" data-view="{$type|escape:'html':'UTF-8'}" data-price="{$price|escape:'html':'UTF-8'}"></div>
+
+{assign var='link' value="`$path`views/js/jquery-ui-1.9.0.custom.min.js"}
+<script type="text/javascript" src="{$link|escape:'html':'UTF-8'}"></script>

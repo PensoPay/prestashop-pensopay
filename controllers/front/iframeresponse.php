@@ -3,7 +3,7 @@
  * NOTICE OF LICENSE
  *
  *  @author    PensoPay A/S
- *  @copyright 2015 PensoPay
+ *  @copyright 2019 PensoPay
  *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *
  *  E-mail: support@pensopay.com
@@ -22,10 +22,10 @@ class PensopayIframeresponseModuleFrontController extends ModuleFrontController
             $context->cookie->__set(PensoPay::COOKIE_ORDER_CANCELLED, '1');
             $context->cookie->write();
         }
-        if (defined('_TB_VERSION_')) {
-            echo 'Please wait...';
-        } else {
+        if (_PS_VERSION_ >= '1.7.0.0') {
             echo $this->l('Please wait...');
+        } else {
+            echo 'Please wait...';
         }
         exit;
     }

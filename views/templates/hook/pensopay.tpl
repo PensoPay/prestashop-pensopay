@@ -1,7 +1,8 @@
 {*
 * NOTICE OF LICENSE
-* $Date: 2018/09/15 05:10:42 $
 * Written by PensoPay A/S
+* Copyright 2019
+* license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 * E-mail: support@pensopay.com
 *}
 
@@ -25,7 +26,7 @@
 		{$text|escape:'htmlall':'UTF-8'}
 		&nbsp;
 		{if isset($type) and $type eq 'viabill' and isset($cart_total)}
-			<div class="viabill-pricetag" data-view="payment" data-price="{$cart_total}" style="display: inline"></div>
+			<div class="viabill-pricetag" data-view="payment" data-price="{$cart_total|escape:'htmlall':'UTF-8'}" style="display: inline"></div>
 		{/if}
 {if $fees|@count gt 0}
 <span style="display:table">
