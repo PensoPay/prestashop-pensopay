@@ -22,7 +22,11 @@ class PensopayIframeresponseModuleFrontController extends ModuleFrontController
             $context->cookie->__set(PensoPay::COOKIE_ORDER_CANCELLED, '1');
             $context->cookie->write();
         }
-        echo $this->l('Please wait...');
+        if (defined('_TB_VERSION_')) {
+            echo 'Please wait...';
+        } else {
+            echo $this->l('Please wait...');
+        }
         exit;
     }
 }

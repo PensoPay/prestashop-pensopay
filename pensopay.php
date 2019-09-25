@@ -25,11 +25,37 @@ class PensoPay extends PaymentModule
     const COOKIE_CONTINUEURL = 'continue_url';
     const COOKIE_ORDER_CANCELLED = 'order_cancelled';
 
+    /**
+     * Prestashop >= 1.4.0.0
+     * @var bool
+     */
+    private $v14;
+
+    /**
+     * Prestashop >= 1.5.0.0
+     * @var bool
+     */
+    private $v15;
+
+    /**
+     * Prestashop >= 1.6.0.0
+     * @var bool
+     */
+    private $v16;
+
+    /**
+     * Prestashop >= 1.7.0.0
+     * @var bool
+     */
+    private $v17;
+
+    private $_renderedViabillProducts = array();
+
     public function __construct()
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.1';
+        $this->version = '1.0.2';
         $this->v14 = _PS_VERSION_ >= '1.4.1.0';
         $this->v15 = _PS_VERSION_ >= '1.5.0.0';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
@@ -112,8 +138,11 @@ class PensoPay extends PaymentModule
             $this->registerHook('paymentReturn') &&
             $this->registerHook('PDFInvoice') &&
             $this->registerHook('postUpdateOrderStatus') &&
+            $this->registerHook('displayHeader') &&
+            $this->registerHook('displayProductPriceBlock') &&
             (!$this->v17 || $this->registerHook('paymentOptions')) &&
             (!$this->v17 || $this->registerHook('displayExpressCheckout')) &&
+//            (!$this->v17 || $this->registerHook('displayCartTotalPriceLabel')) &&
             ($this->v17 || $this->registerHook('shoppingCartExtra'));
     }
 
@@ -493,6 +522,15 @@ class PensoPay extends PaymentModule
             }
             if (!$this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('shoppingCartExtra'))) {
                 $this->registerHook('shoppingCartExtra');
+            }
+//            if (!$this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('displayCartTotalPriceLabel'))) {
+//                $this->registerHook('displayCartTotalPriceLabel');
+//            }
+            if (!$this->isRegisteredInHook(Hook::getIdByName('displayProductPriceBlock'))) {
+                $this->registerHook('displayProductPriceBlock');
+            }
+            if (!$this->isRegisteredInHook(Hook::getIdByName('displayHeader'))) {
+                $this->registerHook('displayHeader');
             }
             $this->context->controller->addJqueryUI('ui.sortable');
         } else {
@@ -1266,31 +1304,51 @@ class PensoPay extends PaymentModule
 
     public function hookDisplayProductPriceBlock($data)
     {
-        $product = $data['product'];
-        //Product can be either object or array here
-
-        if (!empty($product) && ($data['type'] === 'after_price' || $data['type'] === 'unit_price') && $this->isViabillValid()) {
-            if (
-                (is_object($product) && !$product->__isset('viabill'))
-                || isset($product['viabill'])
-            ) {
-                //do not repeat more than once per product
-                if (is_object($product)) {
-                    $product->__set('viabill', true);
-                }
-                else {
-                    $product['viabill'] = true;
-                }
+        try {
+            if (!empty($data) && isset($data['product'])) { //v16 iframe condition mandatory
+                $product = $data['product'];
+                //Product can be either object or array here
 
                 $type = Tools::getValue('controller');
-                if ($type !== 'product') {
+                if ($type === 'product') {
+                    $renderAt = 'after_price';
+                } else {
                     $type = 'list';
+                    if ($this->v17) {
+                        $renderAt = 'unit_price';
+                    } else {
+                        $renderAt = 'after_price';
+                    }
                 }
 
-                $this->context->smarty->assign('type', $type);
-                $this->context->smarty->assign('price', round(Product::getPriceStatic($product->getId()), 2));
-                return $this->display(__FILE__, 'viabill/pricetag.tpl');
+                if (!empty($product)
+                    && isset($data['type'])
+                    && $data['type'] === $renderAt
+                    && $this->isViabillValid()
+                ) {
+                    $productId = 0;
+                    if (is_object($product)) {
+                        if ($this->v17) {
+                            $productId = $product->getId();
+                        } elseif ($this->v16) {
+                            $productId = $product->id;
+                        }
+                    } elseif (is_array($product)) { //<= v16
+                        $productId = $product['id_product'];
+                    }
+
+                    //We need different conditions for version support so here goes:
+                    if ($productId && !isset($this->_renderedViabillProducts[$productId])) {
+                        //do not repeat more than once per product
+                        $this->_renderedViabillProducts[$productId] = true;
+
+                        $this->context->smarty->assign('type', $type);
+                        $this->context->smarty->assign('price', round(Product::getPriceStatic($productId), 2));
+                        return $this->display(__FILE__, 'viabill/pricetag.tpl');
+                    }
+                }
             }
+        } catch (Exception $e) {
         }
     }
 
@@ -1750,7 +1808,7 @@ class PensoPay extends PaymentModule
         $vars = $this->jsonDecode($json);
         $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
         parse_str($query, $args);
-        if ($args['key2']) {
+        if (isset($args['key2']) && $args['key2']) {
             $this->context->customer->mylogout();
         }
         return $this->display(__FILE__, 'views/templates/hook/confirmation.tpl');
@@ -2061,12 +2119,25 @@ class PensoPay extends PaymentModule
         }
     }
 
+    //<=1.6 below the total label
+//    public function hookDisplayCartTotalPriceLabel($params)
+//    {
+//        $cart = $params['cart'];
+//
+//        if ($this->isViabillValid()) {
+//            $smarty = $this->context->smarty;
+//            $smarty->assign('type', 'basket');
+//            $smarty->assign('price', round($cart->getOrderTotal(), 2));
+//            return $this->display(__FILE__, 'viabill/pricetag.tpl');
+//        }
+//    }
+
     public function hookDisplayExpressCheckout($params)
     {
         $html = '';
         $cart = $params['cart'];
 
-        if ($this->isViabillValid()) {
+        if ($this->v17 && $this->isViabillValid()) {
             $smarty = $this->context->smarty;
             $smarty->assign('type', 'basket');
             $smarty->assign('price', round($cart->getOrderTotal(), 2));
@@ -2326,7 +2397,7 @@ class PensoPay extends PaymentModule
     {
         $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
         parse_str($query, $args);
-        if ($args['key2']) {
+        if (isset($args['key2']) && $args['key2']) {
             // New customer
             $customer = new Customer();
             $email = $vars->invoice_address->email;

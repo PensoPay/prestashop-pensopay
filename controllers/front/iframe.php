@@ -29,6 +29,10 @@ class PensopayIframeModuleFrontController extends ModuleFrontController
                 'endpoint' => $pensopay->getModuleLink('iframepoll', array('order_id' => Tools::getValue('order_id')))
             )
         );
-        $this->setTemplate('module:pensopay/views/templates/front/iframe.tpl');
+        if (_PS_VERSION_ >= '1.7.0.0') {
+            $this->setTemplate('module:pensopay/views/templates/front/iframe.tpl');
+        } else {
+            $this->setTemplate('iframe16.tpl');
+        }
     }
 }
