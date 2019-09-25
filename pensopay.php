@@ -2,7 +2,7 @@
 /**
 * NOTICE OF LICENSE
 *
-*  @author    PensoPay ApS
+*  @author    PensoPay A/S
 *  @copyright 2015 PensoPay
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *
@@ -34,7 +34,7 @@ class PensoPay extends PaymentModule
         $this->v15 = _PS_VERSION_ >= '1.5.0.0';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
-        $this->author = 'PensoPay ApS';
+        $this->author = 'PensoPay A/S';
         $this->module_key = 'b99f59b30267e81da96b12a8d1aa5bac';
         $this->need_instance = 0;
         $this->secure_key = Tools::encrypt($this->name);

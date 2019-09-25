@@ -2,7 +2,7 @@
 /**
 * NOTICE OF LICENSE
 *
-*  @author    PensoPay ApS
+*  @author    PensoPay A/S
 *  @copyright 2015 PensoPay
 *  @license   http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *

@@ -4,7 +4,7 @@
     <displayName><![CDATA[PensoPay]]></displayName>
     <version><![CDATA[1.0.1]]></version>
     <description><![CDATA[Payment via PensoPay]]></description>
-    <author><![CDATA[PensoPay ApS]]></author>
+    <author><![CDATA[PensoPay A/S]]></author>
     <tab><![CDATA[payments_gateways]]></tab>
 	<confirmUninstall><![CDATA[Are you sure you want to delete your settings?]]></confirmUninstall>
     <is_configurable>1</is_configurable>

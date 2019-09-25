@@ -1,7 +1,7 @@
 {*
 * NOTICE OF LICENSE
 * $Date: 2016/02/02 11:50:13 $
-* Written by PensoPay ApS
+* Written by PensoPay A/S
 * E-mail: support@pensopay.com
 *}
 
