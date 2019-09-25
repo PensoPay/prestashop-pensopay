@@ -12,7 +12,7 @@
     </h3>
     <div>
 	<div>
-            _HTML_
+            {$html nofilter}
         </div>
     </div>
 </div>

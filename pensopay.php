@@ -313,7 +313,7 @@ class PensoPay extends PaymentModule
         if ($this->setup->mobilepaycheckout) {
             $this->setup->mobilepay = 1;
         }
-        // $this->dump($this->setup->card_type_locks);
+
         return $this->setup;
     }
 
@@ -408,16 +408,6 @@ class PensoPay extends PaymentModule
         }
     }
 
-    public function dump($var, $name = null)
-    {
-        print '<pre>';
-        if ($name) {
-            print "$name:\n";
-        }
-        print_r($var);
-        print '</pre>';
-    }
-
     public function changeState()
     {
         $target = Tools::getValue('target');
@@ -470,10 +460,14 @@ class PensoPay extends PaymentModule
         if (isset($this->back_file) && !file_exists($this->back_file)) {
             $err = $this->l('This module requires the backward compatibility module.');
             if (!Module::isInstalled('backwardcompatibility')) {
-                $err .= ' '.$this->l('You can get the compatibility module for free from').
-                    ' <a href="http://addons.prestashop.com">http://addons.prestashop.com</a>';
+                $err .= ' ' . $this->l('You can get the compatibility module for free from') . ' %link%';
             }
-            $err .= '<br><br>'.$this->l('You must configure the compatibilty module.');
+            $err .= ' ' . $this->l('You must configure the compatibility module.');
+
+            $this->context->smarty->assign('generic', $err);
+            $this->context->smarty->assign('linkTitle', 'http://addons.prestashop.com');
+            $this->context->smarty->assign('linkHref', 'http://addons.prestashop.com');
+            $err .= $this->display(__FILE__, 'admin/messages/generic.tpl');
             return $this->displayError($err);
         }
 
@@ -503,26 +497,19 @@ class PensoPay extends PaymentModule
             $this->context->controller->addJqueryUI('ui.sortable');
         } else {
             // Old PrestaShop
-            require $this->local_path.'backward_compatibility/HelperForm.php';
-            $output .= '<script type="text/javascript" src="'.
-                $this->_path.'views/js/jquery-ui-1.9.0.custom.min.js"></script>';
+            require $this->local_path . 'backward_compatibility/HelperForm.php';
+            $this->context->smarty->assign('path', $this->_path);
+            $output .= $this->context->smarty->fetch($this->local_path . 'views/templates/compatibility/jqueryui.tpl');
         }
         $output .= $this->displayErrors();
         if (Tools::getValue('submitPensopayModule') && !$this->post_errors) {
-            $output .= '
-                <div class="alert alert-success conf confirm">
-                '.$this->l('Settings updated').'
-                </div>';
+            $this->context->smarty->assign('message', $this->l('Settings updated'));
+            $output .= $this->display(__FILE__, 'admin/messages/success.tpl');
         }
 
         $this->context->smarty->assign('module_dir', $this->_path);
-        $this->context->smarty->clearCompiledTemplate(
-            $this->local_path.'views/templates/hook/pensopay.tpl'
-        );
-
-        $output .= $this->context->smarty->fetch(
-            $this->local_path.'views/templates/admin/configure.tpl'
-        );
+        $this->context->smarty->clearCompiledTemplate($this->local_path . 'views/templates/hook/pensopay.tpl');
+        $output .= $this->display(__FILE__, 'admin/configure.tpl');
 
         $output .= $this->renderForm();
         $output .= $this->previewPayment();
@@ -576,11 +563,7 @@ class PensoPay extends PaymentModule
                     );
         }
 
-        $out = $helper->generateForm(array($this->getConfigSettings()));
-        if (!$this->v16) {
-            $out .= '<br>';
-        }
-        return $out;
+        return $helper->generateForm(array($this->getConfigSettings()));
     }
 
     protected function renderList()
@@ -881,6 +864,14 @@ class PensoPay extends PaymentModule
         return $out;
     }
 
+    public function getGenericMessage($generic, $linkTitle, $linkHref)
+    {
+        $this->context->smarty->assign('generic', $generic);
+        $this->context->smarty->assign('linkTitle', $linkTitle);
+        $this->context->smarty->assign('linkHref', $linkHref);
+        return $this->display(__FILE__, 'admin/messages/generic.tpl');
+    }
+
     protected function postProcess()
     {
         if (Tools::getValue('action') == 'changeState') {
@@ -914,8 +905,7 @@ class PensoPay extends PaymentModule
                 $this->post_errors[] = $this->l('Merchant ID is required.');
             }
             if (Tools::strlen($setup->orderprefix) != 3) {
-                $this->post_errors[] =
-                    $this->l('Order prefix must be exactly 3 characters long.');
+                $this->post_errors[] = $this->l('Order prefix must be exactly 3 characters long.');
             }
             $txt = Tools::iconv('utf-8', 'ASCII', $setup->statementtext);
             if ($txt != $setup->statementtext) {
@@ -929,20 +919,29 @@ class PensoPay extends PaymentModule
             $data = $this->doCurl('payments', array(), 'POST');
             $vars = $this->jsonDecode($data);
             if ($vars->message == 'Invalid API key') {
-                $this->post_errors[] = $this->l('Invalid QuickPay user key. Check the key at').
-                    ' <a href="https://manage.quickpay.net">https://manage.quickpay.net</a>.';
+                $this->post_errors[] = $this->getGenericMessage(
+                    $this->l('Invalid QuickPay user key. Check the key at') . ' %link%',
+                    'https://manage.quickpay.net',
+                    'https://manage.quickpay.net'
+                );
             } elseif ($setup->autofee) {
                 $fees = $this->getFees(100);
                 if (!$fees) {
-                    $this->post_errors[] = $this->l('Could not access fees via user key. Check access rights in').
-                        ' <a href="https://manage.quickpay.net">https://manage.quickpay.net</a>.';
+                    $this->post_errors[] = $this->getGenericMessage(
+                        $this->l('Could not access fees via user key. Check access rights in') . ' %link%',
+                        'https://manage.quickpay.net',
+                        'https://manage.quickpay.net'
+                    );
                 }
             }
             $data = $this->doCurl('payments', array('order_id=0'), 'GET');
             $vars = $this->jsonDecode($data);
             if ($vars && Tools::substr($vars->message, 0, 14) == 'Not authorized') {
-                $this->post_errors[] = $this->l('Could not access payments via user key. Check access rights in').
-                    ' <a href="https://manage.quickpay.net">https://manage.quickpay.net</a>.';
+                $this->post_errors[] = $this->getGenericMessage(
+                    $this->l('Could not access payments via user key. Check access rights in') . ' %link%',
+                    'https://manage.quickpay.net',
+                    'https://manage.quickpay.net'
+                );
             }
         }
     }
@@ -1287,8 +1286,10 @@ class PensoPay extends PaymentModule
                 if ($type !== 'product') {
                     $type = 'list';
                 }
-                return '<div class="viabill-pricetag" data-view="' . $type . '" data-price="'
-                    . round(Product::getPriceStatic($product->getId()), 2) . '"></div>';
+
+                $this->context->smarty->assign('type', $type);
+                $this->context->smarty->assign('price', round(Product::getPriceStatic($product->getId()), 2));
+                return $this->display(__FILE__, 'viabill/pricetag.tpl');
             }
         }
     }
@@ -1333,30 +1334,8 @@ class PensoPay extends PaymentModule
             $this->context->controller->addJS($this->_path.'/views/js/cart.js');
         }
         if ($this->isViabillValid()) {
-            return "<script type='text/javascript'>
-                var o;
-    
-                var viabillInit = function() {
-                    o =document.createElement('script');
-                    o.type='text/javascript';
-                    o.async=true;
-                    o.id = 'viabillscript';
-                    o.src='https://pricetag.viabill.com/script/" . $this->getSetup()->viabillid . "';
-                    var s=document.getElementsByTagName('script')[0];
-                    s.parentNode.insertBefore(o,s);
-                };
-    
-                var viabillReset = function() {
-                    document.getElementById('viabillscript').remove();
-                    vb = null;
-                    pricetag = null;
-                    viabillInit();
-                };
-    
-                (function() {
-                    viabillInit();
-                })();
-            </script>";
+            $this->context->smarty->assign('viabillId', $this->getSetup()->viabillid);
+            return $this->display(__FILE__, 'viabill/init.tpl');
         }
     }
 
@@ -1596,8 +1575,11 @@ class PensoPay extends PaymentModule
                 'imgs'        => $images_list,
                 'text'        => $this->l('Pay with').' '.$card_text,
                 'type'        => $vars->var_name,
-                'module_dir'  => $this->_path
+                'module_dir'  => $this->_path,
+                'no_print_link'  => isset($params['no_print_link']) && $params['no_print_link'],
+                'cart_total'  => $cart->getOrderTotal(true)
             );
+
             $smarty->assign($fields);
             if ($this->v17 && empty($cart->qpPreview)) {
                 $parms = array('option' => $id_option, 'order_id' => $order_id);
@@ -1628,20 +1610,17 @@ class PensoPay extends PaymentModule
         $cart = new Cart();
         $cart->id_currency = Configuration::get('PS_CURRENCY_DEFAULT');
         $cart->qpPreview = true;
+
         $params['cart'] = $cart;
-        $innerHtml = $this->makePayment($params, $paymentOptions);
-        $innerHtml = str_replace('</a>', '', $innerHtml);
-        $innerHtml = preg_replace('/<a [^>]*>/', '', $innerHtml);
-        // $innerHtml .= print_r($this->imagesSetup(), true);
+        $params['no_print_link'] = true;
+
         $this->context->smarty->assign('title', $this->l('Payment preview'));
-        $outerHtml = $this->display(__FILE__, 'views/templates/hook/preview.tpl');
-        $html = str_replace('_HTML_', $innerHtml, $outerHtml);
-        $innerHtml = $this->hookLeftColumn();
-        $innerHtml = str_replace('<center>', '', $innerHtml);
-        $innerHtml = str_replace('</center>', '', $innerHtml);
+        $this->context->smarty->assign('html', $this->makePayment($params, $paymentOptions));
+        $html = $this->display(__FILE__, 'views/templates/hook/preview.tpl');
+
         $this->context->smarty->assign('title', $this->l('Card logo preview'));
-        $outerHtml = $this->display(__FILE__, 'views/templates/hook/preview.tpl');
-        $html .= str_replace('_HTML_', $innerHtml, $outerHtml);
+        $this->context->smarty->assign('html', $this->hookLeftColumn(false));
+        $html .= $this->display(__FILE__, 'views/templates/hook/preview.tpl');
         return $html;
     }
 
@@ -1661,7 +1640,7 @@ class PensoPay extends PaymentModule
     }
 
 
-    public function hookLeftColumn()
+    public function hookLeftColumn($doCenter = true)
     {
         $smarty = $this->context->smarty;
 
@@ -1677,7 +1656,8 @@ class PensoPay extends PaymentModule
             $smarty->assign(
                 array(
                     'ordering_list' => $ordering_list,
-                    'link' => $this->context->link
+                    'link' => $this->context->link,
+                    'doCenter' => $doCenter
                 )
             );
             return $this->display(__FILE__, 'views/templates/hook/leftpensopay.tpl');
@@ -1817,33 +1797,11 @@ class PensoPay extends PaymentModule
             $trans_id = $vars->id;
             $order_id = $vars->order_id;
         }
-        if ($this->v16) {
-            $html = '<div class="row"><div class="col-lg-5 panel pensopay-order-info">
-                <div class="panel-heading"><img src="'.$this->_path.'logo.gif" />
-                '.$this->l('PensoPay API').'</div>';
-        } else {
-            $html = '<br>
-                <fieldset class="pensopay-order-info">
-                <legend>'.$this->l('PensoPay API').'</legend>';
-        }
 
-        $html .= '
-            <style type="text/css">
-                
-                
-                .pensopay-order-info > div.panel-heading {
-                    text-align: center;
-                    height: 100% !important;
-                }
-                
-                .pensopay-order-info > div > img {
-                    width: 160px;
-                    display: block;
-                    padding-top: 15px;
-                    margin: 0 auto;
-                }
-            </style>
-        ';
+        $smarty = $this->context->smarty;
+
+        $smarty->assign('img_path', $this->_path);
+        $smarty->assign('title', $this->l('PensoPay API'));
 
         $double_post = false;
         $status_data = $this->doCurl('payments/'.$trans_id);
@@ -1861,7 +1819,6 @@ class PensoPay extends PaymentModule
             $amount = $this->toQpAmount($amount, $currency);
             $fields = array('amount='.$amount);
             $action_data = $this->doCurl('payments/'.$trans_id.'/capture', $fields);
-            // $html .= '<pre>'.print_r(json_decode($action_data), true).'</pre>';
         }
 
         if (!$double_post && Tools::isSubmit('qprefund')) {
@@ -1870,195 +1827,121 @@ class PensoPay extends PaymentModule
             $amount = $this->toQpAmount($amount, $currency);
             $fields = array('amount='.$amount);
             $action_data = $this->doCurl('payments/'.$trans_id.'/refund', $fields);
-            // $html .= '<pre>'.print_r(json_decode($action_data), true).'</pre>';
         }
 
         if (!$double_post && Tools::isSubmit('qpcancel')) {
             $action_data = $this->doCurl('payments/'.$trans_id.'/cancel', null, 'POST');
-            // $html .= '<pre>'.print_r($action_data, true).'</pre>';
-            // $html .= '<pre>'.print_r(json_decode($action_data), true).'</pre>';
         }
 
         if (isset($action_data)) {
             $vars = $this->jsonDecode($action_data);
             if (isset($vars) && isset($vars->errors) && get_object_vars($vars->errors)) {
+                $smarty->assign('errors', true);
                 if (isset($vars->errors->amount) && $vars->errors->amount[0] == 'is too large') {
-                    $html .= '<p class="error alert-danger">'.$this->l('Amount is too large').'</p>';
+                    $smarty->assign('error_text', $this->l('Amount is too large'));
                 } else {
-                    $html .= '<pre>'.print_r($this->jsonDecode($action_data), true).'</pre>';
+                    $smarty->assign('error_json', print_r($this->jsonDecode($action_data), true));
                 }
             } elseif (isset($vars) && isset($vars->message)) {
-                $html .= '<p class="error alert-danger">'.$vars->message.'</p>';
+                $smarty->assign('errors', true);
+                $smarty->assign('error_text', $vars->message);
             }
         }
 
         // Get status reply from pensopay
         $status_data = $this->doCurl('payments/'.$trans_id);
         if (empty($status_data)) {
-            $html .= '<pre>'.$this->curl_error.'</pre>';
+            $smarty->assign('fatal_error', true);
+            $smarty->assign('fatal_error_text', $this->curl_error);
             if ($this->v16) {
-                $html .= '</div></div>';
-            } else {
-                $html .= '</fieldset>';
+                return $this->display(__FILE__, 'admin/order/payment.tpl');
             }
-            return $html;
+            return $this->display(__FILE__, 'admin/order/payment15.tpl');
         }
         $vars = $this->jsonDecode($status_data);
         if (empty($vars->id)) {
-            $html .= '<pre>'.$vars->message.'</pre>';
+            $smarty->assign('fatal_error', true);
+            $smarty->assign('fatal_error_text', $vars->message);
             if ($this->v16) {
-                $html .= '</div></div>';
-            } else {
-                $html .= '</fieldset>';
+                return $this->display(__FILE__, 'admin/order/payment.tpl');
             }
-            return $html;
+            return $this->display(__FILE__, 'admin/order/payment15.tpl');
         }
 
-        $html .= '<table>';
-        $html .= '<tbody>';
-        $html .= '<tr><th style="padding-right:10px">';
-        $html .= $this->l('PensoPay order ID:');
-        $html .= '</th><td>';
-        $html .= $order_id;
-        if ($vars->test_mode) {
-            $html .= ' ['.$this->l('test mode').']';
-        }
-        $html .= '</td></tr>';
-
-        $html .= '<tr><th>';
-        $html .= $this->l('Transaction ID:');
-        $html .= '</th><td>';
-        $html .= $vars->id;
-        $html .= '</td></tr>';
-
-        $html .= '<tr><th>';
-        $html .= $this->l('Acquirer:');
-        $html .= '</th><td>';
-        $html .= Tools::ucfirst($vars->acquirer);
-        $html .= ' '.Tools::ucfirst($vars->facilitator);
-        $html .= '</td></tr>';
-
-        $html .= '<tr><th>';
-        $html .= $this->l('Card type:');
-        $html .= '</th><td>';
-        $html .= Tools::ucfirst($vars->metadata->brand);
-        if ($vars->metadata->is_3d_secure) {
-            $html .= ' '.$this->l('[3D secure]');
-        }
-        $html .= '</td></tr>';
-
-        $html .= '<tr><th>';
-        $html .= $this->l('Country:');
-        $html .= '</th><td>';
-        $html .= $vars->metadata->country;
-        $html .= '</td></tr>';
-
-        $html .= '<tr><th>';
-        $html .= $this->l('Created:');
-        $html .= '</th><td>';
-        $html .= Tools::displayDate(
-            date(
-                'Y-m-d H:i:s',
-                strtotime($vars->created_at)
-            ),
-            null,
-            true
-        );
-        $html .= '</td></tr>';
+        $smarty->assign('test_mode', $vars->test_mode);
+        $smarty->assign('order_id', $order_id);
+        $smarty->assign('transaction_id', $vars->id);
+        $smarty->assign('acquirer', Tools::ucfirst($vars->acquirer) . ' ' . Tools::ucfirst($vars->facilitator));
+        $smarty->assign('card_type', Tools::ucfirst($vars->metadata->brand) . ' ' . $this->l('[3D secure]'));
+        $smarty->assign('country', $vars->metadata->country);
+        $smarty->assign('created', Tools::displayDate(date('Y-m-d H:i:s', strtotime($vars->created_at)), null, true));
 
         if ($vars->metadata->fraud_suspected) {
             if (empty($vars->metadata->fraud_remarks)) {
                 $vars->metadata->fraud_remarks[] = $this->l('Suspicious payment');
             }
-            $html .= '<tr><th>';
-            $html .= $this->l('Fraud:');
-            $html .= '</th><td class="alert-danger">';
-            $html .= implode(
-                '</td></tr><tr><td></td><td class="alert-danger">',
-                $vars->metadata->fraud_remarks
-            );
-            $html .= '</td></tr>';
+            $smarty->assign('fraud_remarks', $vars->metadata->fraud_remarks);
         }
 
-        $html .= '</tbody>';
-        $html .= '</table><br>';
-
-        if (Tools::getValue('qpDebug')) {
-            $html .= '<pre>'.print_r($this->jsonDecode($status_data), true).'</pre>';
-        }
-        // $html .= '<pre>'.print_r($_POST, true).'</pre>';
-        $html .= '<table class="table">';
-        $html .= '<thead>';
-        $html .= '<tr><th>';
-        $html .= $this->l('Date');
-        $html .= '</th><th>';
-        $html .= $this->l('Operation');
-        $html .= '</th><th>';
-        $html .= $this->l('Amount');
-        $html .= '</th></tr>';
-        $html .= '</thead>';
-        $html .= '<tbody>';
         $resttocap = - $vars->balance;
         $resttoref = 0;
         $allowcancel = true;
         $qp_count = count($vars->operations);
         $qp_total = $this->toQpAmount($order->total_paid, $currency);
+
+        $smartyOperations = array();
         foreach ($vars->operations as $operation) {
-            $html .= '<tr><td>';
-            $html .= Tools::displayDate(
-                date(
-                    'Y-m-d H:i:s',
-                    strtotime($operation->created_at)
-                ),
-                null,
-                true
+            $smartyOperation = array(
+                'date' => Tools::displayDate(date('Y-m-d H:i:s', strtotime($operation->created_at)), null, true)
             );
-            $html .= '</td><td>';
+
             switch ($operation->type) {
                 case 'capture':
                     $resttoref += $operation->amount;
                     $resttocap -= $operation->amount;
                     $allowcancel = false;
-                    $html .= $this->l('Captured');
+                    $status = $this->l('Captured');
                     break;
                 case 'authorize':
                     if ($operation->aq_status_code == 202) {
                         $resttocap = 0;
-                        $html .= $this->l('Waiting for approval');
+                        $status = $this->l('Waiting for approval');
                     } else {
                         if ($operation->amount > $qp_total) {
                             $resttocap = $qp_total;
                         } else {
                             $resttocap = $operation->amount;
                         }
-                        $html .= $this->l('Authorized');
+                        $status = $this->l('Authorized');
                     }
                     break;
                 case 'refund':
                     $resttoref -= $operation->amount;
                     $resttocap += $operation->amount;
-                    $html .= $this->l('Refunded');
+                    $status = $this->l('Refunded');
                     break;
                 case 'cancel':
                     $resttocap = 0;
                     $allowcancel = false;
-                    $html .= $this->l('Cancelled');
+                    $status = $this->l('Cancelled');
                     break;
                 case 'session':
                     $resttocap += $operation->amount;
-                    $html .= $this->l('Pending');
+                    $status = $this->l('Pending');
                     break;
                 default:
-                    $html .= $operation->type;
+                    $status = $operation->type;
                     break;
             }
             if ($operation->qp_status_code != '20000') {
-                $html .= ' ['.$this->l('Not approved!').']';
+                $status .= ' [' . $this->l('Not approved!') . ']';
             }
-            $html .= '</td><td style="text-align:right">';
-            $html .= ' '.$this->displayQpAmount($operation->amount, $currency);
-            $html .= '</td></tr>';
+            $smartyOperation['status'] = $status;
+            $smartyOperation['amount'] = $this->displayQpAmount($operation->amount, $currency);
+            $smartyOperations[] = $smartyOperation;
         }
+        $smarty->assign('operations', $smartyOperations);
+
         if ($resttocap < 0) {
             $resttocap = 0;
         }
@@ -2067,8 +1950,6 @@ class PensoPay extends PaymentModule
             $resttoref = 0;
         }
         $resttoref = $this->fromQpAmount($resttoref, $currency);
-        $html .= '</tbody>';
-        $html .= '</table>';
 
         if ($this->v15) {
             $url = 'index.php?controller='.Tools::getValue('controller');
@@ -2079,48 +1960,19 @@ class PensoPay extends PaymentModule
             $url .= '&id_order='.Tools::getValue('id_order');
             $url .= '&vieworder&token='.Tools::getValue('token');
         }
-        $html .= '<br><br>';
-        if ($resttocap > 0) {
-            $resttocap = $this->toUserAmount($resttocap, $currency);
-            $html .= '<form action="'.$url.'" method="post" name="capture-cancel">';
-            $html .= '<input type="hidden" name="qp_count" value="'.$qp_count.'" />';
-            $html .= '<b>'.$this->l('Amount to capture:').'</b>';
-            $html .= '<div>
-                <input style="width:auto;display:inline" type="text" name="acramount" value="'.$resttocap.'"/>
-                <input type="submit" class="button" name="qpcapture" value="'.
-                $this->l('Capture').'" onclick="return confirm(\''.
-                $this->l('Are you sure you want to capture the amount?').'\')"/></div><br>';
-            $html .= '</form>';
-        }
-        if ($resttoref > 0) {
-            $resttoref = $this->toUserAmount($resttoref, $currency);
-            $html .= '<form action="'.$url.'" method="post" name="capture-cancel">';
-            $html .= '<input type="hidden" name="qp_count" value="'.$qp_count.'" />';
-            $html .= '<b>'.$this->l('Amount to refund').' ('.$resttoref.'):</b>';
-            $html .= '<div>
-                <input style="width:auto;display:inline" type="text" name="acramountref" id="acramountref" value="" />
-                <input type="submit" class="button" name="qprefund" value="'.
-                $this->l('Refund').'" onclick="return confirm(\''.
-                $this->l('Are you sure you want to refund the amount?').'\');"/></div><br>';
-            $html .= '</form>';
-        }
-        if ($allowcancel) {
-            $html .= '<form action="'.$url.'" method="post" name="capture-cancel">';
-            $html .= '<input type="hidden" name="qp_count" value="'.$qp_count.'" />';
-            $html .= '<input type="submit" name="qpcancel" value="';
-            $html .= $this->l('Cancel the transaction!');
-            $html .= '" class="button" onclick="return confirm(\'';
-                    $html .= $this->l('Are you sure you want cancel the transaction?').'\')"/></center>';
-            $html .= '</form><br>';
-        }
-        $html .= '<a href="https://manage.quickpay.net" target="_blank" style="color: blue;">'.
-            $this->l('QuickPay manager').'</a>';
+
+        $smarty->assign('url', $url);
+        $smarty->assign('resttocap', $resttocap);
+        $smarty->assign('resttoref', $resttoref);
+        $smarty->assign('allowcancel', $allowcancel);
+        $smarty->assign('qp_count', $qp_count);
+        $smarty->assign('resttocap_render', $this->toUserAmount($resttocap, $currency));
+        $smarty->assign('resttoref_render', $this->toUserAmount($resttoref, $currency));
+
         if ($this->v16) {
-            $html .= '</div></div>';
-        } else {
-            $html .= '</fieldset>';
+            return $this->display(__FILE__, 'admin/order/payment.tpl');
         }
-        return $html;
+        return $this->display(__FILE__, 'admin/order/payment15.tpl');
     }
 
 
@@ -2143,18 +1995,13 @@ class PensoPay extends PaymentModule
             // $brand = $this->metadata->brand;
             $vars = $this->jsonDecode($trans['json']);
             if ($this->v15) {
-                $html = '<table><tr>';
-                $html .= '<td style="width:100%; text-align:right">PensoPay transaction ID: '.
-                    $trans['trans_id'].'</td>';
-                $html .= '</tr></table>';
+                $smarty = $this->context->smarty;
+                $smarty->assign('transaction_id', $trans['trans_id']);
+
                 if (isset($vars->acquirer) && $vars->acquirer == 'viabill') {
-                    $html .= '<br>';
-                    $html .='Det skyldige beløb kan alene betales med frigørende virkning til ViaBill, ';
-                    $html .= 'som fremsender særskilt opkrævning.';
-                    $html .= '<br>';
-                    $html .= 'Betaling kan ikke ske ved modregning af krav, der udspringer af andre retsforhold.';
+                    $smarty->assign('viabill', true);
                 }
-                return $html;
+                return $this->display(__FILE__, 'admin/order/pdf.tpl');
             } else {
                 $encoding = $pdf->encoding();
                 $old_str = Tools::iconv('utf-8', $encoding, $order->payment);
@@ -2220,8 +2067,10 @@ class PensoPay extends PaymentModule
         $cart = $params['cart'];
 
         if ($this->isViabillValid()) {
-            $html .= '<div class="viabill-pricetag" data-view="basket" data-price="'
-                        . round($cart->getOrderTotal(), 2) . '"></div>';
+            $smarty = $this->context->smarty;
+            $smarty->assign('type', 'basket');
+            $smarty->assign('price', round($cart->getOrderTotal(), 2));
+            $html .= $this->display(__FILE__, 'viabill/pricetag.tpl');
         }
 
         if (!$this->v17) {

@@ -15,18 +15,18 @@
 {else}
 <p class="payment_module pensopay">
 {/if}
+{if !$no_print_link}
 	<a style="height:auto" href="javascript:$('#pensopay{$type|escape:'htmlall':'UTF-8'}').submit()">
+{/if}
 {foreach from=$imgs item=img}
-            <img src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/{$img|escape:'htmlall':'UTF-8'}.png" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
+	<img src="{$module_dir|escape:'htmlall':'UTF-8'}views/img/{$img|escape:'htmlall':'UTF-8'}.png" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
 {/foreach}
 		&nbsp;
-
-		{if isset($type) and $type eq 'viabill' and isset($cart)}
-			<div class="viabill-pricetag" data-view="payment" data-price="{$cart.totals.total.amount|escape:'htmlall':'UTF-8'}"></div>
-		{/if}
-		&nbsp;
-
 		{$text|escape:'htmlall':'UTF-8'}
+		&nbsp;
+		{if isset($type) and $type eq 'viabill' and isset($cart_total)}
+			<div class="viabill-pricetag" data-view="payment" data-price="{$cart_total}" style="display: inline"></div>
+		{/if}
 {if $fees|@count gt 0}
 <span style="display:table">
 {foreach from=$fees item=fee}
@@ -43,5 +43,7 @@
 {/foreach}
 </span>
 {/if}
+{if !$no_print_link}
 	</a>
+{/if}
 </p>

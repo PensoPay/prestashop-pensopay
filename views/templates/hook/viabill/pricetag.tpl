@@ -1,0 +1,1 @@
+<div class="viabill-pricetag" data-view="{$type nofilter}" data-price="{$price nofilter}"></div>
