@@ -15,7 +15,7 @@
         var poller = setInterval(pollPayment, 5000);
 
         function pollPayment() {
-            jQuery.ajax('{$endpoint|escape:'javascript':'UTF-8'}}', {
+            jQuery.ajax('{$endpoint|escape:'javascript':'UTF-8'}', {
                 success: function (response) {
                     var obj = JSON.parse(response);
                     if (!obj.repeat) {

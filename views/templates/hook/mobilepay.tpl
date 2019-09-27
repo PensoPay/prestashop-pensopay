@@ -12,8 +12,8 @@
         <li>
             <div class="terms-checkbox">
               <span class="custom-checkbox">
-                <input  id    = "conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]"
-                        name  = "conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]"
+                <input  id    = "conditions_to_approve[{$condition_name}]"
+                        name  = "conditions_to_approve[{$condition_name}]"
                         required
                         type  = "checkbox"
                         value = "1"
@@ -23,8 +23,8 @@
               </span>
             </div>
             <div class="condition-label">
-                <label class="js-terms" for="conditions_to_approve[{$condition_name|escape:'html':'UTF-8'}}]">
-                    {$condition|escape:'html':'UTF-8'}
+                <label class="js-terms" for="conditions_to_approve[{$condition_name}]">
+                    {$condition nofilter}
                 </label>
             </div>
         </li>
@@ -32,11 +32,11 @@
 </ul>
 
 {if $smarty.const._PS_VERSION_ >= 1.7}
-    <button class="btn btn-primary mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'javascript':'UTF-8'}';" disabled>
+    <button class="btn btn-primary mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'url':'UTF-8'}';" disabled>
         <span>MobilePay Checkout</span>
     </button>
 {else}
-<button class="btn btn-default button button-medium mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'javascript':'UTF-8'}';" disabled>
+<button class="btn btn-default button button-medium mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'url':'UTF-8'}';" disabled>
     <span>MobilePay Checkout</span>
 </button>
 {/if}

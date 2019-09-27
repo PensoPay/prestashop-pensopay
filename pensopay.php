@@ -54,7 +54,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.2';
+        $this->version = '1.0.3';
         $this->v14 = _PS_VERSION_ >= '1.4.1.0';
         $this->v15 = _PS_VERSION_ >= '1.5.0.0';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
@@ -1661,6 +1661,9 @@ class PensoPay extends PaymentModule
                     ->setAdditionalInformation($this->fetch($tpl));
                 $paymentOptions[] = $newOption;
             } else {
+                if (Module::isInstalled('onepagecheckout')) {
+                    $smarty->assign('onepagecheckout', true);
+                }
                 $html .= $this->display(__FILE__, 'views/templates/hook/pensopay.tpl');
             }
         }

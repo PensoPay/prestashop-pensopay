@@ -9,11 +9,11 @@
 <div class="panel previewPayment">
     <h3>
         <i class="icon-camera"></i>
-        {$title|escape:'htmlall':'UTF-8'}
+        {$title|escape:'nofilter':'UTF-8'}
     </h3>
     <div>
 	<div>
-            {$html|escape:'javascript':'UTF-8'}
+            {$html|escape:'nofilter':'UTF-8'}
         </div>
     </div>
 </div>
