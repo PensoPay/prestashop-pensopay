@@ -65,7 +65,7 @@ class PensopayIframepollModuleFrontController extends ModuleFrontController
                                         'redirect' => $continueurl
                                     ];
                                 break;
-                            } else {
+                            } elseif ($operation->qp_status_code != 30100) { //If not waiting for 3d secure
                                 $err = true;
                             }
                         }

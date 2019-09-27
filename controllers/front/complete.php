@@ -18,9 +18,16 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
     {
         $id_cart = (int)Tools::getValue('id_cart');
         $id_module = (int)Tools::getValue('id_module');
+
         $key = Tools::getValue('key');
+        //In one page checkout with guest checkout enabled,
+        //the key will always be invalid because it is impossible to be known on checkout.
+        $isOpcGuestFix = Configuration::get('PS_GUEST_CHECKOUT_ENABLED') && Module::isInstalled('onepagecheckout');
+        if ($isOpcGuestFix) {
+            $key = null;
+        }
         $key2 = Tools::getValue('key2');
-        if (!$id_module || !$key) {
+        if (!$id_module || (!$key && !$isOpcGuestFix)) {
             Tools::redirect('history.php');
         }
         for ($i = 0; $i < 10; $i++) {
