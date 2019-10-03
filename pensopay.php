@@ -60,7 +60,7 @@ class PensoPay extends PaymentModule
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';
-        $this->module_key = 'b99f59b30267e81da96b12a8d1aa5bac';
+        $this->module_key = '336e1fcd36d5758c228e943da36567fe';
         $this->need_instance = 0;
         $this->secure_key = Tools::encrypt($this->name);
         $this->bootstrap = true;
