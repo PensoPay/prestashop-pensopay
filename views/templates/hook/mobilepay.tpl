@@ -32,11 +32,11 @@
 </ul>
 
 {if $smarty.const._PS_VERSION_ >= 1.7}
-    <button class="btn btn-primary mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'url':'UTF-8'}';" disabled>
+    <button class="btn btn-primary mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'quotes':'UTF-8'}';" disabled>
         <span>MobilePay Checkout</span>
     </button>
 {else}
-<button class="btn btn-default button button-medium mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'url':'UTF-8'}';" disabled>
+<button class="btn btn-default button button-medium mobilepay-checkout" onclick="window.location.href = '{$payment_url|escape:'quotes':'UTF-8'}';" disabled>
     <span>MobilePay Checkout</span>
 </button>
 {/if}

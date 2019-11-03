@@ -38,8 +38,7 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
             if ($trans && $trans['accepted']) {
                 break;
             }
-            //TODO: uncomment
-//            sleep(1);
+            sleep(1);
         }
         $pensopay = new PensoPay();
         if ($trans && !$trans['accepted']) {

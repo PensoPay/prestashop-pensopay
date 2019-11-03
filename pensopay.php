@@ -25,18 +25,6 @@ class PensoPay extends PaymentModule
     const COOKIE_ORDER_CANCELLED = 'order_cancelled';
 
     /**
-     * Prestashop >= 1.4.0.0
-     * @var bool
-     */
-    private $v14;
-
-    /**
-     * Prestashop >= 1.5.0.0
-     * @var bool
-     */
-    private $v15;
-
-    /**
      * Prestashop >= 1.6.0.0
      * @var bool
      */
@@ -54,9 +42,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.3';
-        $this->v14 = _PS_VERSION_ >= '1.4.1.0';
-        $this->v15 = _PS_VERSION_ >= '1.5.0.0';
+        $this->version = '1.0.4';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';
@@ -72,18 +58,8 @@ class PensoPay extends PaymentModule
         $this->confirmUninstall =
             $this->l('Are you sure you want to delete your settings?');
 
-        /* Backward compatibility */
-        if (!$this->v15) {
-            $this->local_path = _PS_MODULE_DIR_.$this->name.'/';
-            $this->back_file =
-                $this->local_path.'backward_compatibility/backward.php';
-            if (file_exists($this->back_file)) {
-                require $this->back_file;
-            }
-        }
-
-        if (!$this->v14) {
-            $this->warning = $this->l('This module only works for PrestaShop 1.4, 1.5 and 1.6');
+        if (!$this->v16) {
+            $this->warning = $this->l('This module only works for PrestaShop 1.6 and above');
         }
     }
 
@@ -403,45 +379,22 @@ class PensoPay extends PaymentModule
 
     public function getPageLink($name, $parm)
     {
-        if ($this->v15) {
-            $url = $this->context->link->getPageLink($name, true, null, $parm);
-        } else {
-            $url = Configuration::get('PS_SSL_ENABLED') ? 'https://' : 'http://';
-            $url .= $_SERVER['HTTP_HOST'].__PS_BASE_URI__.$name.'.php?'.$parm;
-        }
-        return $url;
+        return $this->context->link->getPageLink($name, true, null, $parm);
     }
 
     public function getModuleLink($name, $parms = array())
     {
-        if ($this->v15) {
-            $url = $this->context->link->getModuleLink(
-                $this->name,
-                $name,
-                $parms,
-                true
-            );
-        } else {
-            $url = Configuration::get('PS_SSL_ENABLED') ? 'https://' : 'http://';
-            $url .= $_SERVER['HTTP_HOST'].$this->_path.$name.'.php';
-            if ($parms) {
-                $key_values = array();
-                foreach ($parms as $k => $v) {
-                    $key_values[] = $k.'='.$v;
-                }
-                $url .= '?'.implode('&', $key_values);
-            }
-        }
-        return $url;
+        return $this->context->link->getModuleLink(
+            $this->name,
+            $name,
+            $parms,
+            true
+        );
     }
 
     public function addLog($message, $severity = 1, $error_code = null, $object_type = null, $object_id = null)
     {
-        if ($this->v16) {
-            PrestaShopLogger::addLog($message, $severity, $error_code, $object_type, $object_id);
-        } else {
-            Logger::addLog($message, $severity, $error_code, $object_type, $object_id);
-        }
+        PrestaShopLogger::addLog($message, $severity, $error_code, $object_type, $object_id);
     }
 
     public function changeState()
@@ -517,36 +470,30 @@ class PensoPay extends PaymentModule
         }
         $this->getSetup();
         $this->postProcess();
-        if ($this->v15) {
-            if ($this->isRegisteredInHook(Hook::getIdByName('paymentTop'))) {
-                $this->unRegisterHook('paymentTop');
-            }
-            if (!$this->isRegisteredInHook(Hook::getIdByName('header'))) {
-                $this->registerHook('header');
-            }
-            if ($this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('displayExpressCheckout'))) {
-                $this->registerHook('displayExpressCheckout');
-            }
-            if (!$this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('shoppingCartExtra'))) {
-                $this->registerHook('shoppingCartExtra');
-            }
+
+        if ($this->isRegisteredInHook(Hook::getIdByName('paymentTop'))) {
+            $this->unRegisterHook('paymentTop');
+        }
+        if (!$this->isRegisteredInHook(Hook::getIdByName('header'))) {
+            $this->registerHook('header');
+        }
+        if ($this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('displayExpressCheckout'))) {
+            $this->registerHook('displayExpressCheckout');
+        }
+        if (!$this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('shoppingCartExtra'))) {
+            $this->registerHook('shoppingCartExtra');
+        }
 //            if (!$this->v17 && !$this->isRegisteredInHook(Hook::getIdByName('displayCartTotalPriceLabel'))) {
 //                $this->registerHook('displayCartTotalPriceLabel');
 //            }
-            if (!$this->isRegisteredInHook(Hook::getIdByName('displayProductPriceBlock'))) {
-                $this->registerHook('displayProductPriceBlock');
-            }
-            if (!$this->isRegisteredInHook(Hook::getIdByName('displayHeader'))) {
-                $this->registerHook('displayHeader');
-            }
-            $this->context->controller->addJqueryUI('ui.sortable');
-        } else {
-            // Old PrestaShop
-            require $this->local_path . 'backward_compatibility/HelperForm.php';
-            $this->context->smarty->assign('path', $this->_path);
-            $output .= $this->context->smarty->fetch($this->local_path
-                . 'views/templates/front/compatibility/jqueryui.tpl');
+        if (!$this->isRegisteredInHook(Hook::getIdByName('displayProductPriceBlock'))) {
+            $this->registerHook('displayProductPriceBlock');
         }
+        if (!$this->isRegisteredInHook(Hook::getIdByName('displayHeader'))) {
+            $this->registerHook('displayHeader');
+        }
+        $this->context->controller->addJqueryUI('ui.sortable');
+
         $output .= $this->displayErrors();
         if (Tools::getValue('submitPensopayModule') && !$this->post_errors) {
             $this->context->smarty->assign('message', $this->l('Settings updated'));
@@ -578,36 +525,23 @@ class PensoPay extends PaymentModule
         $helper->allow_employee_form_lang =
             Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG');
         if (!$helper->allow_employee_form_lang) {
-            // For old 1.5 helper
             $helper->allow_employee_form_lang = 0;
         }
 
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'submitPensopayModule';
-        if ($this->v15) {
-            $helper->currentIndex =
-                $this->context->link->getAdminLink('AdminModules', false).
-                '&configure='.$this->name.
-                '&tab_module='.$this->tab.
-                '&module_name='.$this->name;
-            $helper->token = Tools::getAdminTokenLite('AdminModules');
-            $helper->tpl_vars = array(
-                    'fields_value' => $this->getConfigFormValues(),
-                    'languages' => $this->context->controller->getLanguages(),
-                    'id_language' => $this->context->language->id,
-                    );
-        } else {
-            $helper->currentIndex = 'index.php?tab='.Tools::getValue('tab').
-                '&configure='.Tools::getValue('configure').
-                '&tab_module='.Tools::getValue('tab_module').
-                '&module_name='.Tools::getValue('module_name');
-            $helper->token = Tools::getValue('token');
-            $helper->tpl_vars = array(
-                    'fields_value' => $this->getConfigFormValues(),
-                    'languages' => Language::getLanguages(),
-                    'id_language' => $this->context->language->id,
-                    );
-        }
+
+        $helper->currentIndex =
+            $this->context->link->getAdminLink('AdminModules', false).
+            '&configure='.$this->name.
+            '&tab_module='.$this->tab.
+            '&module_name='.$this->name;
+        $helper->token = Tools::getAdminTokenLite('AdminModules');
+        $helper->tpl_vars = array(
+                'fields_value' => $this->getConfigFormValues(),
+                'languages' => $this->context->controller->getLanguages(),
+                'id_language' => $this->context->language->id,
+                );
 
         return $helper->generateForm(array($this->getConfigSettings()));
     }
@@ -652,13 +586,7 @@ class PensoPay extends PaymentModule
             )
         );
 
-        if ($this->v16) {
-            return $this->display(__FILE__, 'list.tpl');
-        } elseif ($this->v15) {
-            return $this->display(__FILE__, 'list15.tpl');
-        } else {
-            return $this->display(__FILE__, 'views/templates/hook/list15.tpl');
-        }
+        return $this->display(__FILE__, 'list.tpl');
     }
 
     protected function useCheckBox($vars)
@@ -671,44 +599,8 @@ class PensoPay extends PaymentModule
             $vars->var_name != 'paymethod';
     }
 
-    protected function getConfigInput15($vars)
-    {
-        if ($this->useCheckBox($vars)) {
-            $input = array(
-                    'type' => 'select',
-                    'name' => $vars->glob_name,
-                    'label' => $vars->card_text,
-                    'options' => array(
-                        'query' =>  array(
-                            array(
-                                'id' => '0',
-                                'name' => $this->l('No')
-                                ),
-                            array(
-                                'id' => '1',
-                                'name' => $this->l('Yes')
-                                )
-                            ),
-                        'id' => 'id',
-                        'name' => 'name'
-                        )
-                    );
-        } else {
-            $input = array(
-                    'size' => strpos($vars->var_name, '_key') === false ? 10 : 60,
-                    'type' => 'text',
-                    'name' => $vars->glob_name,
-                    'label' => $vars->card_text
-                    );
-        }
-        return $input;
-    }
-
     protected function getConfigInput($vars)
     {
-        if (!$this->v16) {
-            return $this->getConfigInput15($vars);
-        }
         if ($this->useCheckBox($vars)) {
             $input = array(
                     'type' => 'switch',
@@ -994,11 +886,7 @@ class PensoPay extends PaymentModule
 
     public function jsonDecode($data)
     {
-        if ($this->v15) {
-            return Tools::jsonDecode($data);
-        } else {
-            return call_user_func('json_decode', $data);
-        }
+        return Tools::jsonDecode($data);
     }
 
     public function getCurlHandle($resource, $fields = null, $method = null)
@@ -1341,7 +1229,7 @@ class PensoPay extends PaymentModule
                         } elseif ($this->v16) {
                             $productId = $product->id;
                         }
-                    } elseif (is_array($product)) { //<= v16
+                    } elseif (is_array($product)) {
                         $productId = $product['id_product'];
                     }
 
@@ -1414,11 +1302,7 @@ class PensoPay extends PaymentModule
 
     public function hookHeader()
     {
-        if ($this->v16) {
-            $this->context->controller->addCSS($this->_path.'/views/css/front.css');
-        } else {
-            $this->context->controller->addCSS($this->_path.'/views/css/front15.css');
-        }
+        $this->context->controller->addCSS($this->_path.'/views/css/front.css');
     }
 
     public function hookPaymentTop()
@@ -1862,9 +1746,7 @@ class PensoPay extends PaymentModule
     public function hookAdminOrder($params)
     {
         $order = new Order((int)$params['id_order']);
-        if ($this->v15) {
-            $this->orderShopId = $order->id_shop;
-        }
+        $this->orderShopId = $order->id_shop;
         $setup = $this->getSetup();
         if (!$setup->api) {
             return '';
@@ -1956,19 +1838,13 @@ class PensoPay extends PaymentModule
         if (empty($status_data)) {
             $smarty->assign('fatal_error', true);
             $smarty->assign('fatal_error_text', $this->curl_error);
-            if ($this->v16) {
-                return $this->display(__FILE__, 'admin/order/payment.tpl');
-            }
-            return $this->display(__FILE__, 'admin/order/payment15.tpl');
+            return $this->display(__FILE__, 'admin/order/payment.tpl');
         }
         $vars = $this->jsonDecode($status_data);
         if (empty($vars->id)) {
             $smarty->assign('fatal_error', true);
             $smarty->assign('fatal_error_text', $vars->message);
-            if ($this->v16) {
-                return $this->display(__FILE__, 'admin/order/payment.tpl');
-            }
-            return $this->display(__FILE__, 'admin/order/payment15.tpl');
+            return $this->display(__FILE__, 'admin/order/payment.tpl');
         }
 
         $smarty->assign('test_mode', $vars->test_mode);
@@ -2054,15 +1930,9 @@ class PensoPay extends PaymentModule
         }
         $resttoref = $this->fromQpAmount($resttoref, $currency);
 
-        if ($this->v15) {
-            $url = 'index.php?controller='.Tools::getValue('controller');
-            $url .= '&id_order='.Tools::getValue('id_order');
-            $url .= '&vieworder&token='.Tools::getValue('token');
-        } else {
-            $url = 'index.php?tab='.Tools::getValue('tab');
-            $url .= '&id_order='.Tools::getValue('id_order');
-            $url .= '&vieworder&token='.Tools::getValue('token');
-        }
+        $url = 'index.php?controller='.Tools::getValue('controller');
+        $url .= '&id_order='.Tools::getValue('id_order');
+        $url .= '&vieworder&token='.Tools::getValue('token');
 
         $smarty->assign('url', $url);
         $smarty->assign('resttocap', $resttocap);
@@ -2072,22 +1942,14 @@ class PensoPay extends PaymentModule
         $smarty->assign('resttocap_render', $this->toUserAmount($resttocap, $currency));
         $smarty->assign('resttoref_render', $this->toUserAmount($resttoref, $currency));
 
-        if ($this->v16) {
-            return $this->display(__FILE__, 'admin/order/payment.tpl');
-        }
-        return $this->display(__FILE__, 'admin/order/payment15.tpl');
+        return $this->display(__FILE__, 'admin/order/payment.tpl');
     }
 
 
     public function hookPDFInvoice($params)
     {
-        if ($this->v15) {
-            $object = $params['object'];
-            $order = new Order((int)$object->id_order);
-        } else {
-            $pdf = $params['pdf'];
-            $order = new Order($params['id_order']);
-        }
+        $object = $params['object'];
+        $order = new Order((int)$object->id_order);
         $trans = Db::getInstance()->getRow(
             'SELECT *
             FROM '._DB_PREFIX_.'pensopay_execution
@@ -2097,41 +1959,14 @@ class PensoPay extends PaymentModule
         if (isset($trans['trans_id'])) {
             // $brand = $this->metadata->brand;
             $vars = $this->jsonDecode($trans['json']);
-            if ($this->v15) {
-                $smarty = $this->context->smarty;
-                $smarty->assign('transaction_id', $trans['trans_id']);
 
-                if (isset($vars->acquirer) && $vars->acquirer == 'viabill') {
-                    $smarty->assign('viabill', true);
-                }
-                return $this->display(__FILE__, 'admin/order/pdf.tpl');
-            } else {
-                $encoding = $pdf->encoding();
-                $old_str = Tools::iconv('utf-8', $encoding, $order->payment);
-                $new_str = Tools::iconv(
-                    'utf-8',
-                    $encoding,
-                    $order->payment.' TransID: '.$trans['trans_id']
-                );
-                $pdf->pages[1] = str_replace($old_str, $new_str, $pdf->pages[1]);
-                if (isset($vars->acquirer) && $vars->acquirer == 'viabill') {
-                    $pdf->Ln(14);
-                    $width = 165;
-                    $txt = Tools::iconv(
-                        'utf-8',
-                        $encoding,
-                        'Det skyldige beløb kan alene betales med frigørende virkning til ViaBill, '.
-                        'som fremsender særskilt opkrævning.'
-                    );
-                    $pdf->Cell($width, 3, $txt, 0, 2, 'L');
-                    $txt = Tools::iconv(
-                        'utf-8',
-                        $encoding,
-                        'Betaling kan ikke ske ved modregning af krav, der udspringer af andre retsforhold.'
-                    );
-                    $pdf->Cell($width, 3, $txt, 0, 2, 'L');
-                }
+            $smarty = $this->context->smarty;
+            $smarty->assign('transaction_id', $trans['trans_id']);
+
+            if (isset($vars->acquirer) && $vars->acquirer == 'viabill') {
+                $smarty->assign('viabill', true);
             }
+            return $this->display(__FILE__, 'admin/order/pdf.tpl');
         }
     }
 
@@ -2164,19 +1999,6 @@ class PensoPay extends PaymentModule
         }
     }
 
-    //<=1.6 below the total label
-//    public function hookDisplayCartTotalPriceLabel($params)
-//    {
-//        $cart = $params['cart'];
-//
-//        if ($this->isViabillValid()) {
-//            $smarty = $this->context->smarty;
-//            $smarty->assign('type', 'basket');
-//            $smarty->assign('price', round($cart->getOrderTotal(), 2));
-//            return $this->display(__FILE__, 'viabill/pricetag.tpl');
-//        }
-//    }
-
     public function hookDisplayExpressCheckout($params)
     {
         $html = '';
@@ -2203,6 +2025,8 @@ class PensoPay extends PaymentModule
         }
         $prefix = $this->getConf('_PENSOPAY_ORDER_PREFIX');
         $order_id = $prefix.(int)$cart->id;
+        $cart->secure_key = md5(uniqid(rand(), true));
+        $cart->save();
         $parms = array(
             'option' => 'mobilepay',
             'order_id' => $order_id,
@@ -2555,11 +2379,8 @@ class PensoPay extends PaymentModule
         }
 
         $vars = $this->jsonDecode($json);
-        if ($this->v16) {
-            $brand = $this->getBrand($vars);
-        } else {
-            $brand = $this->displayName;
-        }
+
+        $brand = $this->getBrand($vars);
         $accepted = $vars->accepted ? 1 : 0;
         $test_mode = $vars->test_mode ? 1 : 0;
         $id_cart = (int)Tools::substr($vars->order_id, 3);
@@ -2599,12 +2420,12 @@ class PensoPay extends PaymentModule
             );
             $this->addLog($msg, 2, 0, 'Cart', $id_cart);
         }
-        if ($this->v15) {
-            Shop::setContext(Shop::CONTEXT_SHOP, $cart->id_shop);
-            $customer = new Customer((int)$cart->id_customer);
-            Context::getContext()->customer = $customer;
-            Context::getContext()->currency = $currency;
-        }
+
+        Shop::setContext(Shop::CONTEXT_SHOP, $cart->id_shop);
+        $customer = new Customer((int)$cart->id_customer);
+        Context::getContext()->customer = $customer;
+        Context::getContext()->currency = $currency;
+
         $trans = Db::getInstance()->getRow(
             'SELECT *
             FROM '._DB_PREFIX_.'pensopay_execution
@@ -2727,9 +2548,8 @@ class PensoPay extends PaymentModule
         } else {
             $product = new Product();
         }
-        if ($this->v15) {
-            $cache_entries = Cache::retrieveAll();
-        }
+
+        $cache_entries = Cache::retrieveAll();
         if ($fee <= 0) {
             return;
         }
@@ -2749,9 +2569,7 @@ class PensoPay extends PaymentModule
         if ($currency->id != $id_currency && $currency->conversion_rate) {
             $product->price /= $currency->conversion_rate;
         }
-        if ($this->v15) {
-            $product->is_virtual = 1;
-        }
+        $product->is_virtual = 1;
         $product->id_tax_rules_group = $this->setup->feetax;
         if ($product->id_tax_rules_group) {
             $address = new Address($cart->id_address_delivery);
@@ -2763,49 +2581,41 @@ class PensoPay extends PaymentModule
             }
         }
         $product->price = Tools::ps_round($product->price, 6);
-        if ($this->v15) {
-            if ($row) {
-                $product->update();
-            } else {
-                Shop::setContext(Shop::CONTEXT_ALL, $cart->id_shop);
-                $product->add();
-                Shop::setContext(Shop::CONTEXT_SHOP, $cart->id_shop);
-            }
-            $rows = Group::getGroups($cart->id_lang);
-            foreach ($rows as $row) {
-                Db::getInstance()->Execute(
-                    'INSERT IGNORE INTO `'._DB_PREFIX_.'product_group_reduction_cache`
-                    (`id_product`, `id_group`, `reduction`)
-                    VALUES ('.(int)$product->id.', '.$row['id_group'].', 0)'
-                );
-            }
-            StockAvailable::setQuantity($product->id, 0, 100);
+        if ($row) {
+            $product->update();
         } else {
-            if ($row) {
-                $product->update();
-            } else {
-                $product->add();
-            }
+            Shop::setContext(Shop::CONTEXT_ALL, $cart->id_shop);
+            $product->add();
+            Shop::setContext(Shop::CONTEXT_SHOP, $cart->id_shop);
         }
+        $rows = Group::getGroups($cart->id_lang);
+        foreach ($rows as $row) {
+            Db::getInstance()->Execute(
+                'INSERT IGNORE INTO `'._DB_PREFIX_.'product_group_reduction_cache`
+                (`id_product`, `id_group`, `reduction`)
+                VALUES ('.(int)$product->id.', '.$row['id_group'].', 0)'
+            );
+        }
+        StockAvailable::setQuantity($product->id, 0, 100);
+
         $cart->updateQty(1, $product->id);
-        if ($this->v15) {
-            foreach ($cache_entries as $cache_id => $value) {
-                $entry = explode('_', $cache_id);
-                if ($entry[0] == 'getContextualValue') {
-                    $entry[] = $product->id;
-                    $entry[] = 0;
-                    $cache_id = implode('_', $entry);
-                    Cache::store($cache_id, $value);
-                    $cache_id = implode('_', $entry).'_1';
-                    Cache::store($cache_id, $value);
-                    $entry[4] = CartRule::FILTER_ACTION_ALL_NOCAP;
-                    $cache_id = implode('_', $entry);
-                    Cache::store($cache_id, $value);
-                    $cache_id = implode('_', $entry).'_1';
-                    Cache::store($cache_id, $value);
-                }
+
+        foreach ($cache_entries as $cache_id => $value) {
+            $entry = explode('_', $cache_id);
+            if ($entry[0] == 'getContextualValue') {
+                $entry[] = $product->id;
+                $entry[] = 0;
+                $cache_id = implode('_', $entry);
+                Cache::store($cache_id, $value);
+                $cache_id = implode('_', $entry).'_1';
+                Cache::store($cache_id, $value);
+                $entry[4] = CartRule::FILTER_ACTION_ALL_NOCAP;
+                $cache_id = implode('_', $entry);
+                Cache::store($cache_id, $value);
+                $cache_id = implode('_', $entry).'_1';
+                Cache::store($cache_id, $value);
             }
-            $cart->getPackageList(true); // Flush cache
         }
+        $cart->getPackageList(true); // Flush cache
     }
 }
