@@ -17,6 +17,19 @@ class PensopayIframepollModuleFrontController extends ModuleFrontController
     public function initContent()
     {
         $context = Context::getContext();
+
+        $cart_id = Tools::getValue('id_cart');
+        $key = Tools::getValue('key');
+
+        if (!$cart_id || !$key) {
+            Tools::redirect('index.php');
+        }
+
+        $cart = new Cart($cart_id);
+        if (!$cart->id || $cart->secure_key !== $key) {
+            Tools::redirect('index.php');
+        }
+
         $isCancelled = $context->cookie->__isset(PensoPay::COOKIE_ORDER_CANCELLED);
         if ($isCancelled) {
             $context->cookie->__unset(PensoPay::COOKIE_ORDER_CANCELLED);
@@ -32,7 +45,8 @@ class PensopayIframepollModuleFrontController extends ModuleFrontController
                         'repeat' => 0,
                         'error' => 1,
                         'success' => 0,
-                        'redirect' => $pensopay->getPageLink('order', 'step=3')
+                        'redirect' => $pensopay->getPageLink('index.php', '')
+//                        'redirect' => $pensopay->getPageLink('order', 'step=3')
                     ];
                 throw new \Exception(); //get out of here
             }
@@ -51,11 +65,12 @@ class PensopayIframepollModuleFrontController extends ModuleFrontController
                             'capture'])
                         ) {
                             if ($operation->qp_status_code == 20000) {
-                                $continueurl = $context->cookie->__get(PensoPay::COOKIE_CONTINUEURL);
-                                if (!empty($continueurl)) {
-                                    $context->cookie->__unset(PensoPay::COOKIE_CONTINUEURL);
-                                    $context->cookie->write();
-                                }
+                                $continueurl = $pensopay->getModuleLink('complete', array(
+                                    'key' => $key,
+                                    'id_cart' => (int)$cart->id,
+                                    'id_module' => (int)$pensopay->id,
+                                    'utm_nooverride' => 1
+                                ));
 
                                 $response =
                                     [
@@ -76,7 +91,8 @@ class PensopayIframepollModuleFrontController extends ModuleFrontController
                                 'repeat' => 0,
                                 'error' => 1,
                                 'success' => 0,
-                                'redirect' => $pensopay->getPageLink('order', 'step=3')
+                                'redirect' => $pensopay->getPageLink('index.php', '')
+//                                'redirect' => $pensopay->getPageLink('order', 'step=3')
                             ];
                     }
                 }

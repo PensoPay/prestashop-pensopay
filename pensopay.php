@@ -87,6 +87,14 @@ class PensoPay extends PaymentModule
         }
     }
 
+    public function isV17() {
+        return $this->v17;
+    }
+
+    public function isV16() {
+        return $this->v16;
+    }
+
     public function varsObj($setup_var)
     {
         $vars = new StdClass();
@@ -1448,15 +1456,26 @@ class PensoPay extends PaymentModule
         if ($delivery_address->address2) {
             $delivery_street .= ' '.$delivery_address->address2;
         }
-        $customer = new Customer((int)$cart->id_customer);
-        if ($customer->secure_key) {
-            $key2 = 0;
+        if ($invoice_address && $invoice_address->id_customer) { //Based on this
+            $customer = new Customer((int)$invoice_address->id_customer);
+            //With this onepagecheckout module, the cart will have invalid data. We have to fix it for a normal flow.
+            //The customer id and the guest id will be the n-1, but we're not gonna guess it.
+            if (Configuration::get('PS_GUEST_CHECKOUT_ENABLED') && Module::isInstalled('onepagecheckout')) {
+                $guestId = Guest::getFromCustomer($invoice_address->id_customer);
+                if ($guestId) {
+                    $cart->id_guest = $guestId;
+                }
+                $cart->id_customer = $invoice_address->id_customer;
+                $cart->secure_key = $customer->secure_key;
+                $cart->save();
+            }
         } else {
-            $key2 = 1;
-            $customer->secure_key = md5(uniqid(rand(), true));
+            $customer = new Customer((int)$cart->id_customer);
         }
+        $this->context->customer = $customer;
         $id_currency = (int)$cart->id_currency;
         $currency = new Currency($id_currency);
+        $order_id = $setup->orderprefix.(int)$cart->id;
 
         $language = new Language($this->context->language->id);
         $cart_total = $this->toQpAmount($cart->getOrderTotal(), $currency);
@@ -1467,24 +1486,39 @@ class PensoPay extends PaymentModule
             'complete',
             array(
                 'key' => $customer->secure_key,
-                'key2' => $key2,
                 'id_cart' => (int)$cart->id,
                 'id_module' => (int)$this->id,
                 'utm_nooverride' => 1
             )
         );
         if ($setup->paymethod == self::METHOD_IFRAME) {
-            $cookies = Context::getContext()->cookie;
-            $cookies->__set(self::COOKIE_CONTINUEURL, $continueurl);
-            $cookies->write();
-            $continueurl = $this->getModuleLink('iframeresponse');
-            $cancelurl = $this->getModuleLink('iframeresponse', array(self::MODE_VARIABLE => self::MODE_CANCEL));
-            $payment_url = $this->getModuleLink('iframe');
+            $continueurl = $this->getModuleLink('iframeresponse', array(
+                'key' => $customer->secure_key,
+                'id_cart' => (int)$cart->id
+            ));
+            $cancelurl = $this->getModuleLink('iframeresponse', array(
+                self::MODE_VARIABLE => self::MODE_CANCEL,
+                'key' => $customer->secure_key,
+                'id_cart' => (int)$cart->id
+            ));
+            $payment_url = $this->getModuleLink('iframe', array(
+                'key' => $cart->secure_key,
+                'id_cart' => (int)$cart->id,
+                'order_id' => (int)$order_id
+            ));
         } else {
-            $cancelurl = $this->getPageLink('order', 'step=3');
-            $payment_url = $this->getModuleLink('payment');
+//            $cancelurl = $this->getPageLink('order', 'step=3');
+            $cancelurl = $this->getPageLink('index.php', '');
+            $payment_url = $this->getModuleLink('payment', array(
+                'key' => $customer->secure_key,
+                'id_cart' => (int)$cart->id,
+                'order_id' => (int)$order_id
+            ));
         }
-        $callbackurl = $this->getModuleLink('validation');
+        $callbackurl = $this->getModuleLink('validation', array(
+            'key' => $customer->secure_key,
+            'id_cart' => (int)$cart->id
+        ));
 
         $html = '';
 
@@ -1494,7 +1528,6 @@ class PensoPay extends PaymentModule
             $fees = false;
         }
 
-        $order_id = $setup->orderprefix.(int)$cart->id;
         $done = false;
         $setup_vars = $this->sortSetup();
         foreach ($setup_vars as $setup_var) {
@@ -1647,7 +1680,12 @@ class PensoPay extends PaymentModule
 
             $smarty->assign($fields);
             if ($this->v17 && empty($cart->qpPreview)) {
-                $parms = array('option' => $id_option, 'order_id' => $order_id);
+                $parms = array(
+                    'option' => $id_option,
+                    'order_id' => $order_id,
+                    'key' => $customer->secure_key,
+                    'id_cart' => $cart->id
+                );
                 $tpl = 'module:pensopay/views/templates/hook/pensopay17.tpl';
 
                 if ($this->setup->paymethod == self::METHOD_IFRAME) {
@@ -1818,9 +1856,6 @@ class PensoPay extends PaymentModule
         $vars = $this->jsonDecode($json);
         $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
         parse_str($query, $args);
-        if (isset($args['key2']) && $args['key2']) {
-            $this->context->customer->mylogout();
-        }
         return $this->display(__FILE__, 'views/templates/hook/confirmation.tpl');
     }
 
@@ -2171,7 +2206,9 @@ class PensoPay extends PaymentModule
         $parms = array(
             'option' => 'mobilepay',
             'order_id' => $order_id,
-            'mobilepay_checkout' => 1
+            'id_cart'  => $order_id,
+            'mobilepay_checkout' => 1,
+            'key' => $cart->secure_key
         );
 
 
@@ -2386,7 +2423,11 @@ class PensoPay extends PaymentModule
             );
             $this->addLog($msg, 2, 0, 'Cart', $id_cart);
             $cart->delete();
-            $fail_url = $this->getModuleLink('fail', array('status' => 'currency'));
+            $fail_url = $this->getModuleLink('fail', array(
+                'status' => 'currency',
+                'key' => $customer->secure_key,
+                'id_cart' => $id_cart
+            ));
             Tools::redirect($fail_url, '');
             return;
         }
@@ -2407,24 +2448,7 @@ class PensoPay extends PaymentModule
     {
         $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
         parse_str($query, $args);
-        if (isset($args['key2']) && $args['key2']) {
-            // New customer
-            $customer = new Customer();
-            $email = $vars->invoice_address->email;
-            if (!$customer->getByEmail($email)) {
-                // New customer
-                $customer->email = $email;
-                $name = explode(' ', $vars->invoice_address->name);
-                $customer->lastname = array_pop($name);
-                $customer->firstname = implode(' ', $name);
-                $customer->passwd = Tools::encrypt(Tools::passwdGen(MIN_PASSWD_LENGTH, 'RANDOM'));
-                $customer->is_guest = true;
-                $customer->add();
-            }
-        } else {
-            // Old customer
-            $customer = new Customer((int)$cart->id_customer);
-        }
+        $customer = new Customer((int)$cart->id_customer);
         $cart->secure_key = $customer->secure_key;
         $cart->id_customer = $customer->id;
         $cart->id_currency = Currency::getIdByIsoCode($vars->currency);
@@ -2549,7 +2573,11 @@ class PensoPay extends PaymentModule
             $msg = 'PensoPay: Validate error. Will not accept test payment!';
             $this->addLog($msg, 2, 0, 'Cart', $id_cart);
             if ($id_order_state == _PS_OS_ERROR_) {
-                $fail_url = $this->getModuleLink('fail', array('status' => 'test'));
+                $fail_url = $this->getModuleLink('fail', array(
+                    'status' => 'test',
+                    'key' => $cart->secure_key,
+                    'id_cart' => $id_cart
+                ));
                 Tools::redirect($fail_url, '');
             }
             die('Will not accept test payment!');

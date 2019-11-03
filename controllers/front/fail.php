@@ -13,6 +13,18 @@ class PensopayFailModuleFrontController extends ModuleFrontController
 {
     public function initContent()
     {
+        $cart_id = Tools::getValue('id_cart');
+        $key = Tools::getValue('key');
+
+        if (!$cart_id || !$key) {
+            Tools::redirect('index.php');
+        }
+
+        $cart = new Cart($cart_id);
+        if (!$cart->id || $cart->secure_key !== $key) {
+            Tools::redirect('index.php');
+        }
+
         parent::initContent();
         Context::getContext()->smarty->assign(
             array(

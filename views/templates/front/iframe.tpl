@@ -15,7 +15,14 @@
         var poller = setInterval(pollPayment, 5000);
 
         function pollPayment() {
-            jQuery.ajax('{$endpoint|escape:'javascript':'UTF-8'}', {
+            jQuery.ajax({
+                url: '{$endpoint|escape:'quotes'}',
+                type: 'get',
+                data: {
+                    id_cart: '{$id_cart|escape:'html'}',
+                    order_id: '{$order_id|escape:'html'}',
+                    key: '{$key|escape:'html'}'
+                },
                 success: function (response) {
                     var obj = JSON.parse(response);
                     if (!obj.repeat) {

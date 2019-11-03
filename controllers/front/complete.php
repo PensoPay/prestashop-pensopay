@@ -20,16 +20,15 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
         $id_module = (int)Tools::getValue('id_module');
 
         $key = Tools::getValue('key');
-        //In one page checkout with guest checkout enabled,
-        //the key will always be invalid because it is impossible to be known on checkout.
-        $isOpcGuestFix = Configuration::get('PS_GUEST_CHECKOUT_ENABLED') && Module::isInstalled('onepagecheckout');
-        if ($isOpcGuestFix) {
-            $key = null;
-        }
-        $key2 = Tools::getValue('key2');
-        if (!$id_module || (!$key && !$isOpcGuestFix)) {
+        if (!$id_module || !$key) {
             Tools::redirect('history.php');
         }
+
+        $cart = new Cart($id_cart);
+        if (!$cart->id || $cart->secure_key !== $key) {
+            Tools::redirect('index.php');
+        }
+
         for ($i = 0; $i < 10; $i++) {
             /* Wait for validation */
             $trans = Db::getInstance()->getRow('SELECT *
@@ -39,10 +38,11 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
             if ($trans && $trans['accepted']) {
                 break;
             }
-            sleep(1);
+            //TODO: uncomment
+//            sleep(1);
         }
+        $pensopay = new PensoPay();
         if ($trans && !$trans['accepted']) {
-            $pensopay = new PensoPay();
             $setup = $pensopay->getSetup();
             $json = $pensopay->doCurl('payments/'.$trans['trans_id']);
             $vars = $pensopay->jsonDecode($json);
@@ -60,25 +60,17 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
         }
         $order = new Order($id_order);
         $customer = new Customer($order->id_customer);
-        if ($key2) {
-            $pensopay = new PensoPay();
-            $trans = Db::getInstance()->getRow('SELECT *
-                FROM '._DB_PREFIX_.'pensopay_execution
-                WHERE `id_cart` = '.$id_cart.'
-                ORDER BY `id_cart` ASC');
-            $json = $trans['json'];
-            $vars = $pensopay->jsonDecode($json);
-            $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
-            parse_str($query, $args);
-            if ($args['key'] == $key) {
-                $key = $customer->secure_key;
-            }
-            $this->context->cookie->id_customer = $customer->id;
-        }
         if (!Validate::isLoadedObject($order) ||
                 $customer->secure_key != $key) {
             Tools::redirect('history.php');
         }
+
+        if (!$pensopay->isV17()) {
+            $cookies = Context::getContext()->cookie;
+            $cookies->id_customer = $order->id_customer;
+            $cookies->write();
+        }
+
         Tools::redirect(
             'index.php?controller=order-confirmation&id_cart='.$id_cart.
             '&id_module='.$id_module.
