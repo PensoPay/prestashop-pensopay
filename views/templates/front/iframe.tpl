@@ -16,7 +16,7 @@
 
         function pollPayment() {
             jQuery.ajax({
-                url: '{$endpoint|escape:'quotes'}',
+                url: '{url entity='module' name='pensopay' controller='iframepoll'}',
                 type: 'get',
                 data: {
                     id_cart: '{$id_cart|escape:'html'}',
