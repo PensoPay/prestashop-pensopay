@@ -63,11 +63,13 @@ class PensoPay extends PaymentModule
         }
     }
 
-    public function isV17() {
+    public function isV17()
+    {
         return $this->v17;
     }
 
-    public function isV16() {
+    public function isV16()
+    {
         return $this->v16;
     }
 
