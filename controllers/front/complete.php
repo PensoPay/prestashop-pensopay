@@ -40,16 +40,21 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
             }
             sleep(1);
         }
+        $isMobilepayCheckout = false;
         $pensopay = new PensoPay();
         if ($trans && !$trans['accepted']) {
             $setup = $pensopay->getSetup();
             $json = $pensopay->doCurl('payments/'.$trans['trans_id']);
             $vars = $pensopay->jsonDecode($json);
+            $isMobilepayCheckout = !empty($vars->link->invoice_address_selection);
             $json = Tools::jsonEncode($vars);
             if ($vars->accepted == 1) {
                 $checksum = $pensopay->sign($json, $setup->private_key);
                 $pensopay->validate($json, $checksum);
             }
+        } else {
+            $vars = $pensopay->jsonDecode($trans['json']);
+            $isMobilepayCheckout = !empty($vars->link->invoice_address_selection);
         }
         unset($this->context->cookie->id_cart);
         parent::init();
@@ -64,7 +69,7 @@ class PensopayCompleteModuleFrontController extends ModuleFrontController
             Tools::redirect('history.php');
         }
 
-        if (!$pensopay->isV17()) {
+        if (!$pensopay->isV17() || $isMobilepayCheckout) {
             $cookies = Context::getContext()->cookie;
             $cookies->id_customer = $order->id_customer;
             $cookies->write();

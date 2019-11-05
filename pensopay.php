@@ -1371,7 +1371,7 @@ class PensoPay extends PaymentModule
         $continueurl = $this->getModuleLink(
             'complete',
             array(
-                'key' => $customer->secure_key,
+                'key' => $cart->secure_key,
                 'id_cart' => (int)$cart->id,
                 'id_module' => (int)$this->id,
                 'utm_nooverride' => 1
@@ -1379,12 +1379,12 @@ class PensoPay extends PaymentModule
         );
         if ($setup->paymethod == self::METHOD_IFRAME) {
             $continueurl = $this->getModuleLink('iframeresponse', array(
-                'key' => $customer->secure_key,
+                'key' => $cart->secure_key,
                 'id_cart' => (int)$cart->id
             ));
             $cancelurl = $this->getModuleLink('iframeresponse', array(
                 self::MODE_VARIABLE => self::MODE_CANCEL,
-                'key' => $customer->secure_key,
+                'key' => $cart->secure_key,
                 'id_cart' => (int)$cart->id
             ));
             $payment_url = $this->getModuleLink('iframe', array(
@@ -1396,13 +1396,13 @@ class PensoPay extends PaymentModule
 //            $cancelurl = $this->getPageLink('order', 'step=3');
             $cancelurl = $this->getPageLink('index.php', '');
             $payment_url = $this->getModuleLink('payment', array(
-                'key' => $customer->secure_key,
+                'key' => $cart->secure_key,
                 'id_cart' => (int)$cart->id,
                 'order_id' => (int)$order_id
             ));
         }
         $callbackurl = $this->getModuleLink('validation', array(
-            'key' => $customer->secure_key,
+            'key' => $cart->secure_key,
             'id_cart' => (int)$cart->id
         ));
 
@@ -2032,7 +2032,7 @@ class PensoPay extends PaymentModule
         $parms = array(
             'option' => 'mobilepay',
             'order_id' => $order_id,
-            'id_cart'  => $order_id,
+            'id_cart'  => $cart->id,
             'mobilepay_checkout' => 1,
             'key' => $cart->secure_key
         );
@@ -2275,7 +2275,22 @@ class PensoPay extends PaymentModule
         $query = parse_url($vars->link->continue_url, PHP_URL_QUERY);
         parse_str($query, $args);
         $customer = new Customer((int)$cart->id_customer);
-        $cart->secure_key = $customer->secure_key;
+        if (!$customer->id) {
+            $customer = new Customer();
+            $email = $vars->invoice_address->email;
+            if (!$customer->getByEmail($email)) {
+                // New customer
+                $customer->email = $email;
+                $name = explode(' ', $vars->invoice_address->name);
+                $customer->lastname = array_pop($name);
+                $customer->firstname = implode(' ', $name);
+                $customer->passwd = Tools::encrypt(Tools::passwdGen(MIN_PASSWD_LENGTH, 'RANDOM'));
+                $customer->is_guest = true;
+                $customer->add();
+                $customer->secure_key = $cart->secure_key; //Cart's & Order's secure key precedes the customer for this.
+                $customer->save();
+            }
+        }
         $cart->id_customer = $customer->id;
         $cart->id_currency = Currency::getIdByIsoCode($vars->currency);
         if ($vars->invoice_address) {
