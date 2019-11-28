@@ -29,7 +29,7 @@ See them all here: https://pensopay.com/en/' mod='pensopay'}
 	</p>
 	<p>
 		<strong>
-			{l s='Any questions, don\'t hesitate to contact us:' mod='pensopay'} <a href="mailto:support@pensopay.com">support@pensopay.com</a> {l s='or' mod='pensopay'} <a href="tel:+45 77344388">+45 77344388</a> {l s='press 9 for English.' mod='pensopay'}
+			{l s='Any questions? Don\'t hesitate to contact us through the ' mod='pensopay'} <a href="https://addons.prestashop.com/en/">Prestashop Addons Store</a>
 		</strong>
 	</p>
 </div>
