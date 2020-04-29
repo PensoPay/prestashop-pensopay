@@ -7,4 +7,4 @@
 *}
 
 {assign var='link' value="`$path`views/js/jquery-ui-1.9.0.custom.min.js"}
-<script type="text/javascript" src="{$link|escape:'html':'UTF-8'}"></script>
+<script type="text/javascript" src="{$link|escape:'javascript':'UTF-8'}"></script>

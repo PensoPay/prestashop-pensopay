@@ -7,7 +7,7 @@
 *}
 <table>
     <tr>
-        <td style="width: 100%; text-align: right">{l s='PensoPay transaction ID:' mod='pensopay'} {$transaction_id|escape:'htmlall':'UTF-8'}</td>
+        <td style="width: 100%; text-align: right">{l s='PensoPay transaction ID:' mod='pensopay'} {$transaction_id|escape:'javascript':'UTF-8'}</td>
     </tr>
 </table>
 {if isset($viabill) AND $viabill}

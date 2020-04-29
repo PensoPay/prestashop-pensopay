@@ -42,7 +42,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.5';
+        $this->version = '1.0.6';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';

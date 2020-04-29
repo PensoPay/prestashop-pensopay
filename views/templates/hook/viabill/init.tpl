@@ -13,7 +13,7 @@
         o.type='text/javascript';
         o.async=true;
         o.id = 'viabillscript';
-        o.src='https://pricetag.viabill.com/script/{$viabillId|escape:'html':'UTF-8'}}';
+        o.src='https://pricetag.viabill.com/script/{$viabillId|escape:'javascript':'UTF-8'}}';
         var s=document.getElementsByTagName('script')[0];
         s.parentNode.insertBefore(o,s);
     };

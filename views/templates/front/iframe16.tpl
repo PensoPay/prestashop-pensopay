@@ -7,7 +7,7 @@
 *}
 {block name="content"}
     <section>
-        <iframe src="{$src|escape:'html':'UTF-8'}" width="100%" height="650" ></iframe>
+        <iframe src="{$src|escape:'javascript':'UTF-8'}" width="100%" height="650" ></iframe>
     </section>
     <script type="text/javascript">
         var poller = setInterval(pollPayment, 5000);
@@ -17,9 +17,9 @@
                 url: '{$endpoint|escape:'quotes'}',
                 type: 'get',
                 data: {
-                    id_cart: '{$id_cart|escape:'html'}',
-                    order_id: '{$order_id|escape:'html'}',
-                    key: '{$key|escape:'html'}'
+                    id_cart: '{$id_cart|escape:'javascript'}',
+                    order_id: '{$order_id|escape:'javascript'}',
+                    key: '{$key|escape:'javascript'}'
                 },
                 success: function (response) {
                     var obj = JSON.parse(response);

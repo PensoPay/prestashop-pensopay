@@ -19,9 +19,9 @@
                 url: '{url entity='module' name='pensopay' controller='iframepoll'}',
                 type: 'get',
                 data: {
-                    id_cart: '{$id_cart|escape:'html'}',
-                    order_id: '{$order_id|escape:'html'}',
-                    key: '{$key|escape:'html'}'
+                    id_cart: '{$id_cart|escape:'javascript'}',
+                    order_id: '{$order_id|escape:'javascript'}',
+                    key: '{$key|escape:'javascript'}'
                 },
                 success: function (response) {
                     var obj = JSON.parse(response);

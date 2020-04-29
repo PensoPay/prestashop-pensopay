@@ -11,7 +11,7 @@
 {/if}
 
 {foreach from=$ordering_list item=var_name}
-  <img src="{$link->getMediaLink("`$module_dir|escape:'htmlall':'UTF-8'`views/img/`$var_name|escape:'htmlall':'UTF-8'`.png")}" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
+  <img src="{$link->getMediaLink("`$module_dir|escape:'javascript':'UTF-8'`views/img/`$var_name|escape:'javascript':'UTF-8'`.png")}" alt="{l s='Pay with credit cards ' mod='pensopay'}" />
 {/foreach}
 
 {if $doCenter}

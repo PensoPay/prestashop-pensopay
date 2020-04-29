@@ -7,5 +7,5 @@
 *}
 
 <div class="alert alert-success conf confirm">
-    {$message|escape:'htmlall':'UTF-8'}
+    {$message|escape:'javascript':'UTF-8'}
 </div>

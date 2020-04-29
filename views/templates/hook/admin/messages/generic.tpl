@@ -9,5 +9,5 @@
     {assign var="assembled_link" value="<a href=\"`$linkHref`\">`$linkTitle`</a>"}
     {$generic|replace:'%link%':$assembled_link|escape:'html':'UTF-8'}
 {else}
-    {$generic|escape:'htmlall':'UTF-8'}
+    {$generic|escape:'javascript':'UTF-8'}
 {/if}
