@@ -42,7 +42,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.6';
+        $this->version = '1.0.7';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';
@@ -219,12 +219,16 @@ class PensoPay extends PaymentModule
                     $this->l('MasterCard Debet'), 0, 'mastercard-debet,mastercard-debet-dk'),
             array('_PENSOPAY_A_EXPRESS', 'express',
                     $this->l('American Express'), 0, 'american-express,american-express-dk'),
+            array('_PENSOPAY_VIPPS', 'vipps',
+                $this->l('Vipps'), 0, 'vipps'),
             array('_PENSOPAY_MOBILEPAY', 'mobilepay',
                     $this->l('MobilePay'), 0, 'mobilepay'),
             array('_PENSOPAY_SWISH', 'swish',
                     $this->l('Swish'), 0, 'swish'),
             array('_PENSOPAY_KLARNA', 'klarna',
                     $this->l('Klarna'), 0, 'klarna'),
+            array('_PENSOPAY_KLARNA_PAYMENTS', 'klarna-payments',
+                    $this->l('Klarna Payments'), 0, 'klarna-payments'),
             array('_PENSOPAY_FORBRUGS_1886', 'f1886',
                     $this->l('Forbrugsforeningen af 1886'), 0, 'fbg1886'),
             array('_PENSOPAY_DINERS', 'diners',
@@ -717,7 +721,7 @@ class PensoPay extends PaymentModule
     {
         $methods = array(
             self::METHOD_REDIRECT => $this->l('Redirect'),
-            self::METHOD_IFRAME   => $this->l('Iframe')
+//            self::METHOD_IFRAME   => $this->l('Iframe')
         );
         $query = array();
         foreach ($methods as $id => $name) {
@@ -1377,22 +1381,24 @@ class PensoPay extends PaymentModule
                 'utm_nooverride' => 1
             )
         );
-        if ($setup->paymethod == self::METHOD_IFRAME) {
-            $continueurl = $this->getModuleLink('iframeresponse', array(
-                'key' => $cart->secure_key,
-                'id_cart' => (int)$cart->id
-            ));
-            $cancelurl = $this->getModuleLink('iframeresponse', array(
-                self::MODE_VARIABLE => self::MODE_CANCEL,
-                'key' => $cart->secure_key,
-                'id_cart' => (int)$cart->id
-            ));
-            $payment_url = $this->getModuleLink('iframe', array(
-                'key' => $cart->secure_key,
-                'id_cart' => (int)$cart->id,
-                'order_id' => (int)$order_id
-            ));
-        } else {
+        //Deprecated iframe
+//        if ($setup->paymethod == self::METHOD_IFRAME) {
+//            $continueurl = $this->getModuleLink('iframeresponse', array(
+//                'key' => $cart->secure_key,
+//                'id_cart' => (int)$cart->id
+//            ));
+//            $cancelurl = $this->getModuleLink('iframeresponse', array(
+//                self::MODE_VARIABLE => self::MODE_CANCEL,
+//                'key' => $cart->secure_key,
+//                'id_cart' => (int)$cart->id
+//            ));
+//            $payment_url = $this->getModuleLink('iframe', array(
+//                'key' => $cart->secure_key,
+//                'id_cart' => (int)$cart->id,
+//                'order_id' => (int)$order_id
+//            ));
+//        } else {
+
 //            $cancelurl = $this->getPageLink('order', 'step=3');
             $cancelurl = $this->getPageLink('index.php', '');
             $payment_url = $this->getModuleLink('payment', array(
@@ -1400,7 +1406,7 @@ class PensoPay extends PaymentModule
                 'id_cart' => (int)$cart->id,
                 'order_id' => (int)$order_id
             ));
-        }
+//        }
         $callbackurl = $this->getModuleLink('validation', array(
             'key' => $cart->secure_key,
             'id_cart' => (int)$cart->id
@@ -1574,11 +1580,11 @@ class PensoPay extends PaymentModule
                 );
                 $tpl = 'module:pensopay/views/templates/hook/pensopay17.tpl';
 
-                if ($this->setup->paymethod == self::METHOD_IFRAME) {
-                    $moduleLink = $this->getModuleLink('iframe', $parms);
-                } else {
+//                if ($this->setup->paymethod == self::METHOD_IFRAME) {
+//                    $moduleLink = $this->getModuleLink('iframe', $parms);
+//                } else {
                     $moduleLink = $this->getModuleLink('payment', $parms);
-                }
+//                }
                 $newOption = new PrestaShop\PrestaShop\Core\Payment\PaymentOption();
                 $newOption->setCallToActionText($fields['text'])
                     ->setAction($moduleLink)
@@ -2039,11 +2045,11 @@ class PensoPay extends PaymentModule
 
 
         $setup = $this->getSetup();
-        if ($setup->paymethod == self::METHOD_IFRAME) {
-            $payment_url = $this->getModuleLink('iframe', $parms);
-        } else {
+//        if ($setup->paymethod == self::METHOD_IFRAME) {
+//            $payment_url = $this->getModuleLink('iframe', $parms);
+//        } else {
             $payment_url = $this->getModuleLink('payment', $parms);
-        }
+//        }
 
         $this->context->smarty->assign('payment_url', $payment_url);
 
@@ -2122,9 +2128,9 @@ class PensoPay extends PaymentModule
             'google_analytics_client_id' => $setup->ga_client_id,
             'google_analytics_tracking_id' => $setup->ga_tracking_id
         );
-        if ($setup->paymethod == self::METHOD_IFRAME) {
-            $info['framed'] = true;
-        }
+//        if ($setup->paymethod == self::METHOD_IFRAME) {
+//            $info['framed'] = true;
+//        }
         if ($mobilepay_checkout) {
             $info += array(
                 'invoice_address_selection' => true,
@@ -2157,10 +2163,12 @@ class PensoPay extends PaymentModule
             $fields[] = $k.'='.urlencode($v);
         }
         if (!in_array('payment_methods=paypal', $fields)) {
-            $info = array(
-                'shipping[amount]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
-                'shipping[vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100,
-            );
+            if (!in_array('payment_methods=klarna-payments', $fields)) {
+                $info = array(
+                    'shipping[amount]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
+                    'shipping[vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100,
+                );
+            }
             foreach ($info as $k => $v) {
                 $fields[] = $k.'='.urlencode($v);
             }
@@ -2171,6 +2179,18 @@ class PensoPay extends PaymentModule
                     'basket[][item_name]' => $product['name'],
                     'basket[][item_price]' => $this->toQpAmount($product['price_wt'], $currency),
                     'basket[][vat_rate]' => $product['rate'] / 100
+                );
+                foreach ($info as $k => $v) {
+                    $fields[] = $k.'='.urlencode($v);
+                }
+            }
+            if (in_array('payment_methods=klarna-payments', $fields)) {
+                $info = array(
+                    'basket[][qty]' => 1,
+                    'basket[][item_no]' => 'shipping',
+                    'basket[][item_name]' => 'shipping',
+                    'basket[][item_price]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
+                    'basket[][vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100
                 );
                 foreach ($info as $k => $v) {
                     $fields[] = $k.'='.urlencode($v);
@@ -2264,9 +2284,9 @@ class PensoPay extends PaymentModule
             $this->addLog($msg, 2, 0, 'Cart', $id_cart);
             die($vars->message);
         }
-        if ($setup->paymethod == self::METHOD_IFRAME) {
-            return $vars->url;
-        }
+//        if ($setup->paymethod == self::METHOD_IFRAME) {
+//            return $vars->url;
+//        }
         Tools::redirect($vars->url, '');
     }
 

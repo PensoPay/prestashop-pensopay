@@ -18,7 +18,7 @@
 		<strong>{l s='PensoPay offers acquiring and payment gateway in one solution!' mod='pensopay'}</strong>
 	</p>
 	<p id="pseudoanchor">
-		{l s='With your PensoPay Solution, you can accept all Visa and MasterCards worldwide, and a lot of alternative payment methods like Apple Pay, MobilePay, Swish, Vipps, PayPal, Klarna, ViaBill, Sofort and lots more.
+		{l s='With your PensoPay Solution, you can accept all Visa and MasterCards worldwide, and a lot of alternative payment methods like Apple Pay, MobilePay, Swish, Vipps, PayPal, Klarna, Klarna Payments, ViaBill, Sofort and lots more.
 See them all here: https://pensopay.com/en/' mod='pensopay'}
 	</p>
 	<p>
