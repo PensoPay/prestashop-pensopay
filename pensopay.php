@@ -2163,12 +2163,12 @@ class PensoPay extends PaymentModule
             $fields[] = $k.'='.urlencode($v);
         }
         if (!in_array('payment_methods=paypal', $fields)) {
-            if (!in_array('payment_methods=klarna-payments', $fields)) {
+//            if (!in_array('payment_methods=klarna-payments', $fields)) {
                 $info = array(
                     'shipping[amount]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
                     'shipping[vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100,
                 );
-            }
+//            }
             foreach ($info as $k => $v) {
                 $fields[] = $k.'='.urlencode($v);
             }
@@ -2184,18 +2184,18 @@ class PensoPay extends PaymentModule
                     $fields[] = $k.'='.urlencode($v);
                 }
             }
-            if (in_array('payment_methods=klarna-payments', $fields)) {
-                $info = array(
-                    'basket[][qty]' => 1,
-                    'basket[][item_no]' => 'shipping',
-                    'basket[][item_name]' => 'shipping',
-                    'basket[][item_price]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
-                    'basket[][vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100
-                );
-                foreach ($info as $k => $v) {
-                    $fields[] = $k.'='.urlencode($v);
-                }
-            }
+//            if (in_array('payment_methods=klarna-payments', $fields)) {
+//                $info = array(
+//                    'basket[][qty]' => 1,
+//                    'basket[][item_no]' => 'shipping',
+//                    'basket[][item_name]' => 'shipping',
+//                    'basket[][item_price]' => $this->toQpAmount($cart->getTotalShippingCost(), $currency),
+//                    'basket[][vat_rate]' => $carrier->getTaxesRate($delivery_address) / 100
+//                );
+//                foreach ($info as $k => $v) {
+//                    $fields[] = $k.'='.urlencode($v);
+//                }
+//            }
         }
         if (!Validate::isLoadedObject($cart)) {
             $msg = 'PensoPay: Payment error. Not a valid cart';
