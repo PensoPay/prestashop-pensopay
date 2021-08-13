@@ -42,7 +42,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.7';
+        $this->version = '1.0.8';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';
@@ -229,6 +229,8 @@ class PensoPay extends PaymentModule
                     $this->l('Klarna'), 0, 'klarna'),
             array('_PENSOPAY_KLARNA_PAYMENTS', 'klarna-payments',
                     $this->l('Klarna Payments'), 0, 'klarna-payments'),
+            array('_PENSOPAY_ANYDAY', 'anyday-split',
+                $this->l('Anyday'), 0, 'anyday-split'),
             array('_PENSOPAY_FORBRUGS_1886', 'f1886',
                     $this->l('Forbrugsforeningen af 1886'), 0, 'fbg1886'),
             array('_PENSOPAY_DINERS', 'diners',
