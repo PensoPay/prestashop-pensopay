@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <module>
     <name>pensopay</name>
-    <displayName><![CDATA[PensoPay]]></displayName>
+    <displayName><![CDATA[Pensopay payment module]]></displayName>
     <version><![CDATA[1.0.8]]></version>
-    <description><![CDATA[Payment via PensoPay]]></description>
+    <description><![CDATA[Pensopay payment module. Supports numerous payment methods.  Apply today to start accepting online payments.]]></description>
     <author><![CDATA[PensoPay A/S]]></author>
     <tab><![CDATA[payments_gateways]]></tab>
 	<confirmUninstall><![CDATA[Are you sure you want to delete your settings?]]></confirmUninstall>

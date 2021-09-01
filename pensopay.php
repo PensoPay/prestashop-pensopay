@@ -53,8 +53,8 @@ class PensoPay extends PaymentModule
 
         parent::__construct();
 
-        $this->displayName = $this->l('PensoPay');
-        $this->description = $this->l('Payment via PensoPay');
+        $this->displayName = $this->l('Pensopay payment module');
+        $this->description = $this->l('Pensopay payment module. Supports numerous payment methods.  Apply today to start accepting online payments.');
         $this->confirmUninstall =
             $this->l('Are you sure you want to delete your settings?');
 
