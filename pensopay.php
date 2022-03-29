@@ -42,7 +42,7 @@ class PensoPay extends PaymentModule
     {
         $this->name = 'pensopay';
         $this->tab = 'payments_gateways';
-        $this->version = '1.0.8';
+        $this->version = '1.0.9';
         $this->v16 = _PS_VERSION_ >= '1.6.0.0';
         $this->v17 = _PS_VERSION_ >= '1.7.0.0';
         $this->author = 'PensoPay A/S';
@@ -253,8 +253,8 @@ class PensoPay extends PaymentModule
                     $this->l('PayPal'), 0, 'paypal'),
             array('_PENSOPAY_SOFORT', 'sofort',
                     $this->l('Sofort'), 0, 'sofort'),
-            array('_PENSOPAY_APPLEPAY', 'applepay',
-                    $this->l('Apple Pay'), 0, 'applepay'),
+            array('_PENSOPAY_APPLE_PAY', 'apple-pay',
+                    $this->l('Apple Pay'), 0, 'apple-pay'),
             array('_PENSOPAY_BITCOIN', 'bitcoin',
                     $this->l('Bitcoin'), 0, 'bitcoin'));
         $this->setup = new StdClass();
@@ -273,7 +273,7 @@ class PensoPay extends PaymentModule
             'maestro',
             'diners',
             'jcb',
-            'applepay'
+            'apple-pay'
         );
         $credit_cards2d = array(
             'visa_3d' => 'visa',
@@ -317,7 +317,7 @@ class PensoPay extends PaymentModule
                         $this->setup->$field = 2;
                     }
                 }
-                if ($vars->var_name == 'applepay') {
+                if ($vars->var_name == 'apple-pay') {
                     $this->setup->$field = 2;
                 }
                 if ($this->setup->$field) {
@@ -1022,7 +1022,7 @@ class PensoPay extends PaymentModule
             $vars = $this->varsObj($setup_var);
             $var_name = $vars->var_name;
             $field = $var_name;
-            if (!$setup->autoget && $vars->var_name == 'applepay') {
+            if (!$setup->autoget && $vars->var_name == 'apple-pay') {
                 continue;
             }
             if (!$vars->card_type_lock || !$setup->$field) {
@@ -1433,7 +1433,7 @@ class PensoPay extends PaymentModule
             $card_list = array($vars->var_name);
             $card_text = $vars->card_text;
             $field = $vars->var_name;
-            if (!$setup->autoget && $vars->var_name == 'applepay') {
+            if (!$setup->autoget && $vars->var_name == 'apple-pay') {
                 continue;
             }
             if (!$vars->card_type_lock || !$setup->$field) {
