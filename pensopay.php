@@ -254,9 +254,7 @@ class PensoPay extends PaymentModule
             array('_PENSOPAY_SOFORT', 'sofort',
                     $this->l('Sofort'), 0, 'sofort'),
             array('_PENSOPAY_APPLE_PAY', 'apple-pay',
-                    $this->l('Apple Pay'), 0, 'apple-pay'),
-            array('_PENSOPAY_BITCOIN', 'bitcoin',
-                    $this->l('Bitcoin'), 0, 'bitcoin'));
+                    $this->l('Apple Pay'), 0, 'apple-pay'));
         $this->setup = new StdClass();
         $this->setup->lock_names = array();
         $this->setup->card_type_locks = array();
